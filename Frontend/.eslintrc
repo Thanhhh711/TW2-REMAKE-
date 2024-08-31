@@ -6,7 +6,7 @@
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "eslint-config-prettier",
-    "prettier",
+    "prettier"
   ],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off", //Quy tắc "no-explicit-any" trong TypeScript đề nghị rằng bạn không nên sử dụng kiểu dữ liệu any một cách rõ ràng trong mã TypeScript của bạn. Kiểu any cho phép bạn áp dụng một kiểu tĩnh cho biến hoặc giá trị mà TypeScript không kiểm tra kiểu dữ liệu
@@ -22,8 +22,8 @@
         "useTabs": false,
         "singleQuote": true,
         "printWidth": 120,
-        "jsxSingleQuote": true,
-      },
-    ],
-  },
+        "jsxSingleQuote": true
+      }
+    ]
+  }
 }

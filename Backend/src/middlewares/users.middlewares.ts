@@ -321,6 +321,8 @@ export const accessTokenValidator = validate(
         },
         custom: {
           options: async (value: string, { req }) => {
+            console.log(value)
+
             const access_token = value.split(' ')[1] // tại chỗ này là bear token nên là phải xóa
             if (!access_token) {
               throw new ErrorWithStatus({

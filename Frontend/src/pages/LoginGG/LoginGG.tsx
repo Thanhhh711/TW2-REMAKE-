@@ -1,9 +1,15 @@
-import { useEffect } from 'react'
+import { useContext, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { path } from '../../constants/path'
+import { AppContext } from '../../contexts/app.context'
+import { saveAccessTokenToLS, saveRefreshTokenToLS } from '../../utils/auth'
 
 export default function LoginGG() {
   const [params] = useSearchParams() //lấy ra các params trong url
   const navigate = useNavigate() //hàm dùng để chuyển hướng trang
+
+  const { setIsAuthenticated } = useContext(AppContext)
+
   useEffect(() => {
     const accessToken = params.get('access_token') //lấy ra access_token từ params
     const refreshToken = params.get('refresh_token') //lấy ra refresh_token từ params
@@ -18,9 +24,10 @@ export default function LoginGG() {
       verify
     }) //log thử
 
-    localStorage.setItem('accessToken', accessToken as string) //lưu access_token vào localStorage
-    localStorage.setItem('refreshToken', refreshToken as string) //lưu refresh_token vào localStorage
-    navigate('/') //xem xong thì bật dòng này để chuyển hướng về trang chủ
+    saveAccessTokenToLS(accessToken as string) //lưu access_token vào localStorage
+    saveRefreshTokenToLS(refreshToken as string) //lưu refresh_token vào localStorage
+    setIsAuthenticated(true)
+    navigate(path.main) //xem xong thì bật dòng này để chuyển hướng về trang chủ
   }, [params]) //useEffect sẽ chạy lại khi params thay đổi
   return <div>Login</div>
 }

@@ -1,16 +1,30 @@
 import { faG } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { yupResolver } from '@hookform/resolvers/yup'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 import Input from '../../components/Input'
 import { path } from '../../constants/path'
+import { schema, Schema } from '../../utils/rules'
 import FormLogin from './FormLogin'
 
 interface Props {
   onClose?: () => void
 }
 
+type FormData = Pick<Schema, 'email'>
+const loginSchema = schema.pick(['email'])
+
 export default function Login({ onClose }: Props) {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<FormData>({
+    resolver: yupResolver(loginSchema)
+  })
+
   const [beap, setBeap] = useState(false)
   const [email, setEmail] = useState('')
   const [openFormLogin, setOpenFormLogin] = useState(false)
@@ -26,11 +40,18 @@ export default function Login({ onClose }: Props) {
     console.log(openFormLogin)
   }
 
-  const handleOpenFormLogin = () => {
+  const handleOpenFormLogin = handleSubmit((data) => {
+    console.log(data)
+
+    console.log(111)
+
     setOpenFormLogin(true)
 
     console.log(openFormLogin)
-  }
+  })
+
+  // Tính toán lớp mt dựa trên sự tồn tại lỗi
+  const mtClass = errors.email ? 'mt-3' : 'mt-1'
 
   const getGoogleAuthUrl = () => {
     const { VITE_GOOGLE_CLIENT_ID, VITE_GOOGLE_REDIRECT_URI } = import.meta.env //import vào .env của Vite
@@ -76,7 +97,9 @@ export default function Login({ onClose }: Props) {
       </header>
 
       <body className='my-10 container w-full '>
-        <h2 className='text-white text-[2rem] font-semibold text-center block my-5   font-segoe'>Đăng nhập vào X</h2>
+        <h2 className='text-white text-[2rem] font-semibold text-center block my-5   font-segoe'>
+          Đăng nhập vào X
+        </h2>
         <div className='my-10 '>
           <Link
             onMouseEnter={() => handleBeap()}
@@ -101,15 +124,19 @@ export default function Login({ onClose }: Props) {
                 id='email'
                 name='email'
                 required
+                register={register}
                 placeholder='Email'
                 value={email}
                 onChange={handleChangeEmail}
+                classNameLabel='absolute top-5 left-2 text-gray-400 transition-transform duration-300 ease-in-out transform scale-75 origin-top-left peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500 peer-placeholder-shown:top-5 peer-placeholder-shown:left-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-400 peer-valid:top-5 peer-valid:left-2 peer-valid:text-blue-500'
+                classNameError=' text-red-500 rounded-full text-left  my-2 text-[10px]'
+                errorMessage={errors.email?.message}
               />
             </div>
           </div>
           <button
             onClick={handleOpenFormLogin}
-            className=' bg-white text-black border-2 p-2 rounded-2xl w-[15rem] font-segoe font-bold hover:bg-slate-300 my-1'
+            className={`bg-white text-black border-2 p-2 rounded-2xl w-[15rem] font-segoe font-bold hover:bg-slate-300 ${mtClass}`}
           >
             Tiếp theo
           </button>
@@ -121,7 +148,9 @@ export default function Login({ onClose }: Props) {
         </button>
       </body>
       <footer className=' '>
-        <span className='text-slate-300 text-sm text-left'>Không có tài khoản?</span>
+        <span className='text-slate-300 text-sm text-left'>
+          Không có tài khoản?
+        </span>
         <Link to={path.formLogin} className='text-blue-500 hover:underline'>
           Đăng Ký
         </Link>

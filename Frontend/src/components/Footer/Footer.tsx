@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <div className='space-x-3.5 text-sm space-y-2 '>
+    <div className='space-x-3.5 text-sm space-y-2  '>
       <Link to={''} className='text-slate-500 hover:underline'>
         Giới thiệu
       </Link>

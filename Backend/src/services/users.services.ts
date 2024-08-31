@@ -122,6 +122,10 @@ class UserSerivce {
 
     const { iat, exp } = await this.decodeRefreshToken(refresh_token)
 
+    const user = await this.getMe(user_id)
+
+    console.log(user)
+
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),
@@ -131,7 +135,7 @@ class UserSerivce {
       })
     )
 
-    return { access_token, refresh_token }
+    return { access_token, refresh_token, user }
   }
 
   async register(payload: RegisterReqBody) {

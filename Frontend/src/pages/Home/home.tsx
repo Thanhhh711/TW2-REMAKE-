@@ -34,7 +34,7 @@ export default function Home() {
   const googleOAuthUrl = getGoogleAuthUrl()
 
   return (
-    <div className='bg-black w-full h-screen  flex-wrap justify-center items-center  '>
+    <div className='bg-black w-full h-screen  flex-wrap justify-center items-center my-5 '>
       <div className='   bg-black p-4 my-20  '>
         <div className='flex   items-center h-full w-full bg-black '>
           <div className='flex justify-between     mx-auto w-full '>
@@ -42,7 +42,11 @@ export default function Home() {
             <div className='w-[50%] flex  justify-start    '>
               <div className=' w-full  px-auto justify-center items-center flex'>
                 <div className='w-[25rem] bg-black   p-4'>
-                  <svg viewBox='0 0 24 24' fill='white' className='w-full h-auto'>
+                  <svg
+                    viewBox='0 0 24 24'
+                    fill='white'
+                    className='w-full h-auto'
+                  >
                     <path d='M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z'></path>
                   </svg>
                 </div>
@@ -69,7 +73,9 @@ export default function Home() {
                     to={googleOAuthUrl}
                   >
                     <FontAwesomeIcon icon={faG} beat={beap} />
-                    <span className='pl-3'>Đăng nhập bằng tài khoản Google</span>
+                    <span className='pl-3'>
+                      Đăng nhập bằng tài khoản Google
+                    </span>
                   </Link>
                 </div>
                 <div className='flex mx-auto justify-start my-2'>
@@ -87,19 +93,28 @@ export default function Home() {
                   <div className='text-left flex mt-3 text-[10px]'>
                     <span className='text-slate-400'>
                       Khi đăng ký, bạn đã đồng ý với
-                      <span className='text-blue-400 hover:underline'> Điều khoản Dịch vụ</span> {''}
+                      <span className='text-blue-400 hover:underline'>
+                        {' '}
+                        Điều khoản Dịch vụ
+                      </span>{' '}
+                      {''}
                       và{''}{' '}
                       <span className='text-blue-400 hover:underline'>
                         Chính <br /> sách Quyền riêng tư
                       </span>
                       , gồm cả
-                      {''} <span className='text-blue-400 hover:underline'>Sử dụng Cookie.</span>
+                      {''}{' '}
+                      <span className='text-blue-400 hover:underline'>
+                        Sử dụng Cookie.
+                      </span>
                     </span>
                   </div>
                 </div>
 
                 <div className='mt-10'>
-                  <h3 className='text-white text-[1.2rem] font-segoe text-left'>Đã có tài khoản?</h3>
+                  <h3 className='text-white text-[1.2rem] font-segoe text-left'>
+                    Đã có tài khoản?
+                  </h3>
                   <button
                     onClick={() => setShowLogin(true)}
                     className='text-blue-500 my-5 block border-[0.1px] border-slate-300 hover:bg-black h-[2.5rem] rounded-3xl text-center w-[20rem] p-2 bg-black font-bold relative overflow-hidden'
@@ -122,6 +137,7 @@ export default function Home() {
           </div>
         </div>
       )}
+
       <Footer />
     </div>
   )

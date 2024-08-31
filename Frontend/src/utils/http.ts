@@ -1,6 +1,12 @@
 import axios, { AxiosError, AxiosInstance } from 'axios'
 
-import { clearLS, getTokenFromLS, saveAccessTokenToLS, saveRefreshTokenToLS, setProfileToLS } from './auth'
+import {
+  clearLS,
+  getTokenFromLS,
+  saveAccessTokenToLS,
+  saveRefreshTokenToLS,
+  setProfileToLS
+} from './auth'
 import config from '../constants/config'
 import { AuthResponse } from '../types/auth.type'
 import { URL_LOGIN, URL_LOGOUT, URL_REGISTER } from '../api/auth.api'
@@ -29,6 +35,7 @@ class Http {
 
         if (this.accessToken && config.headers) {
           config.headers.Authorization = `Bearer ${this.accessToken}`
+          console.log(config.headers.Authorization)
         }
         return config
       },
@@ -45,7 +52,7 @@ class Http {
         if (url === URL_LOGIN || url === URL_REGISTER) {
           const data = response.data as AuthResponse
           console.log(data)
-          this.accessToken = `Bearer ${data.result.access_token}`
+          this.accessToken = data.result.access_token
           console.log('accessToken', data.result.access_token)
 
           this.refreshToken = data.result.refresh_token

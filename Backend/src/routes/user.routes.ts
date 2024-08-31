@@ -59,7 +59,7 @@ body:{
     date_of_birth:string (thep chuẩn ISO8601)
 }
 */
-// usersRouters.post('/register', registerValidator, wrapAsync(registerController))
+usersRouters.post('/register', registerValidator, wrapAsync(registerController))
 
 /*
     des: lougout

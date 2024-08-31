@@ -12,7 +12,13 @@ export const saveRefreshTokenToLS = (refreshToken: string) => {
 }
 
 // token
-export const setTokenToLS = ({ accessToken, refreshToken }: { accessToken: string; refreshToken: string }) => {
+export const setTokenToLS = ({
+  accessToken,
+  refreshToken
+}: {
+  accessToken: string
+  refreshToken: string
+}) => {
   saveAccessTokenToLS(accessToken)
   saveRefreshTokenToLS(refreshToken)
 }
@@ -28,8 +34,10 @@ export const clearLS = () => {
   LocalStrorageEventTarget.dispatchEvent(new Event('clearLS'))
 }
 
-export const getAccessTokenFormLS = () => localStorage.getItem('access_token') || ''
-export const getRefreshTokenFormLS = () => localStorage.getItem('refresh_token') || ''
+export const getAccessTokenFormLS = () =>
+  localStorage.getItem('access_token') || ''
+export const getRefreshTokenFormLS = () =>
+  localStorage.getItem('refresh_token') || ''
 
 // lấy token
 export const getTokenFromLS = () => {
