@@ -10,6 +10,9 @@ import { UPLOAD_VIDEO_DIR } from './constants/dir'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
+import Conversation from './models/schemas/Conversations.schema'
+import { ObjectId } from 'mongodb'
+import conversationsRouter from './routes/conversations.routes'
 const app = express()
 const httpServer = createServer(app)
 config()
@@ -43,6 +46,7 @@ app.get('/', () => {
 app.use('/users', usersRouters)
 app.use('/medias', mediasRouter)
 app.use('/static', staticRouter)
+app.use('/conversations', conversationsRouter)
 app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 app.use(defaultErrorHandle)
 
@@ -54,17 +58,46 @@ const io = new Server(httpServer, {
 })
 //client kết nối với server thì sẽ hiển thị ra dòng này, cho server biết
 //trong callback này socket là đại diện cho 1 client đang sử dụng
+const users: {
+  [key: string]: {
+    socket_id: string
+  }
+} = {}
 io.on('connection', (socket) => {
   console.log(`new client has id: ${socket.id} is connected`)
+
+  const user_id = socket.handshake.auth._id as string
+  users[user_id] = {
+    socket_id: socket.id
+  }
+  console.log(users)
+  //thêm phần lắng nghe sự kiện nhắn tin riêng
+  socket.on('send_message', async (data) => {
+    const { payload } = data
+    //vào  users[user_id].socket_id để lấy đc socket_id của người nhận
+    const receiver_socket_id = users[payload.receiver_id]?.socket_id
+
+    if (!receiver_socket_id) return
+    //tạo ra object conversation từ conversation(payload) do client gữi lên và lưu vào database
+    const conversation = new Conversation({
+      _id: new ObjectId(),
+      sender_id: new ObjectId(user_id),
+      receiver_id: new ObjectId(payload.receiver_id),
+      content: payload.content
+    })
+
+    await databaseService.conversations.insertOne(conversation)
+
+    //gửi conversation mới tạo cho người nhận
+    socket.to(receiver_socket_id).emit('receive_message', {
+      payload: conversation
+    })
+  })
+
   socket.on('disconnect', () => {
+    delete users[user_id]
     console.log(`client has id: ${socket.id} is disconnected`)
-  })
-  socket.emit('serverHiClientEvent', {
-    message: `xin chào Client có id là ${socket.id}, chào mừng đến bình nguyên vô tận`
-  })
-  //cập nhật ở đây
-  socket.on('helloEvent', (agr) => {
-    console.log(agr)
+    console.log(users) //log ra để xem sau khi disconnect thi users có gì
   })
 })
 

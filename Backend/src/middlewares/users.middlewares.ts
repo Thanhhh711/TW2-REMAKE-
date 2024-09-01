@@ -324,6 +324,8 @@ export const accessTokenValidator = validate(
             console.log(value)
 
             const access_token = value.split(' ')[1] // tại chỗ này là bear token nên là phải xóa
+            console.log('access_token', access_token)
+
             if (!access_token) {
               throw new ErrorWithStatus({
                 status: HTTP_STATUS.UNAUTHORIZED,
@@ -365,7 +367,9 @@ export const refreshTokenValidator = validate(
           options: async (value: string, { req }) => {
             try {
               const decoded_refresh_token = await verifyToken({
-                token: value
+                token: value,
+                secretOrPublicKey: process.env
+                  .JWT_SECRET_REFRESH_TOKEN as string
               })
 
               req.decoded_refresh_token = decoded_refresh_token
@@ -665,5 +669,14 @@ export const refreshValidator = validate(
       }
     },
     ['body']
+  )
+)
+
+export const getConversationValidator = validate(
+  checkSchema(
+    {
+      receiver_id: userIdSchema
+    },
+    ['params']
   )
 )

@@ -16,7 +16,7 @@ function ProtectedRoute() {
 function RejectedRoute() {
   const { isAuthenticated } = useContext(AppContext)
 
-  return !isAuthenticated ? <Outlet /> : <Navigate to={path.main} />
+  return !isAuthenticated ? <Outlet /> : <Navigate to={path.chat} />
 }
 
 export default function useRouterElement() {
@@ -35,10 +35,7 @@ export default function useRouterElement() {
           path: path.loginGG,
           element: <LoginGG />
         },
-        {
-          path: path.chat,
-          element: <Chat />
-        },
+
         {
           path: path.login,
           element: <Login />
@@ -51,7 +48,7 @@ export default function useRouterElement() {
       element: <ProtectedRoute />,
       children: [
         {
-          path: path.main,
+          path: path.chat,
           element: <Chat />
         }
       ]

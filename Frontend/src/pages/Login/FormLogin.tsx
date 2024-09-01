@@ -10,6 +10,7 @@ import { AppContext } from '../../contexts/app.context'
 import { schema, Schema } from '../../utils/rules'
 import { isAxiosUnprocessableEntityError } from '../../utils/utils'
 import { ErrorResponse } from '../../types/utils.type'
+import { User } from '../../types/user.type'
 
 interface Props {
   email?: string
@@ -20,7 +21,7 @@ type FormData = Pick<Schema, 'email' | 'password'>
 const loginSchema = schema.pick(['email', 'password'])
 
 export default function FormLogin({ email, onClose }: Props) {
-  const { setIsAuthenticated } = useContext(AppContext)
+  const { setIsAuthenticated, setProfile } = useContext(AppContext)
   const navigate = useNavigate()
   const {
     register,
@@ -41,13 +42,11 @@ export default function FormLogin({ email, onClose }: Props) {
     mutationFn: (body: FormData) => authApi.loginAccount(body)
   })
 
-  const onSubmit = handleSubmit((data) => {
-    console.log(11)
-
-    console.log(data)
+  const onSubmit = handleSubmit((data: FormData) => {
     loginMutation.mutate(data, {
-      onSuccess: () => {
+      onSuccess: (data) => {
         console.log('OKKK')
+        setProfile(data.data.result.user as User)
         setIsAuthenticated(true)
         navigate(path.chat)
       },
@@ -92,9 +91,7 @@ export default function FormLogin({ email, onClose }: Props) {
       </header>
 
       <body className='my-10 container w-full '>
-        <h2 className='text-white text-[2rem] font-semibold text-center block my-5   font-segoe'>
-          Nhập mật khẩu của bạn
-        </h2>
+        <h2 className='text-white text-[2rem] font-semibold text-center block my-5   font-segoe'>Nhập mật khẩu của bạn</h2>
 
         <form action='' onSubmit={onSubmit}>
           <div className='bg-black p-4  '>
@@ -114,6 +111,7 @@ export default function FormLogin({ email, onClose }: Props) {
                     value={email}
                     readOnly
                     errorMessage={errors.email?.message}
+                    autoComplete='true'
                   />
                 </div>
               </div>
@@ -136,10 +134,7 @@ export default function FormLogin({ email, onClose }: Props) {
                   />
                 </div>
               </div>
-              <button
-                type='button'
-                className='text-[12px] text-left mr-[8rem] my-4  bg-black text-blue-400 w-[10rem] font-segoe font-thin'
-              >
+              <button type='button' className='text-[12px] text-left mr-[8rem] my-4  bg-black text-blue-400 w-[10rem] font-segoe font-thin'>
                 Quên mật khẩu?
               </button>
             </div>
@@ -159,9 +154,7 @@ export default function FormLogin({ email, onClose }: Props) {
         </form>
       </body>
       <footer className=' '>
-        <span className='text-slate-300 text-sm text-left'>
-          Không có tài khoản?
-        </span>
+        <span className='text-slate-300 text-sm text-left'>Không có tài khoản?</span>
         <Link to={path.home} className='text-blue-500 hover:underline'>
           Đăng Ký
         </Link>

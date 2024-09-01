@@ -1,22 +1,18 @@
 import axios, { AxiosError, AxiosInstance } from 'axios'
 
-import {
-  clearLS,
-  getTokenFromLS,
-  saveAccessTokenToLS,
-  saveRefreshTokenToLS,
-  setProfileToLS
-} from './auth'
-import config from '../constants/config'
-import { AuthResponse } from '../types/auth.type'
+// import { path } from '../constants/path'
+// import { useNavigate } from 'react-router-dom'
 import { URL_LOGIN, URL_LOGOUT, URL_REGISTER } from '../api/auth.api'
+import config from '../constants/config'
 import { HttpStatusCode } from '../constants/HttpStatusCode.enum'
+import { AuthResponse } from '../types/auth.type'
+import { clearLS, getTokenFromLS, saveAccessTokenToLS, saveRefreshTokenToLS, setProfileToLS } from './auth'
 
 class Http {
   instance: AxiosInstance
   private accessToken: string
   private refreshToken: string
-
+  // navigate = useNavigate()
   constructor() {
     const { access_token, refresh_token } = getTokenFromLS()
     this.accessToken = access_token
@@ -31,7 +27,7 @@ class Http {
 
     this.instance.interceptors.request.use(
       (config) => {
-        console.log(config)
+        console.log(config.headers.Authorization)
 
         if (this.accessToken && config.headers) {
           config.headers.Authorization = `Bearer ${this.accessToken}`
@@ -63,7 +59,10 @@ class Http {
           saveRefreshTokenToLS(this.refreshToken)
           setProfileToLS(data.result.user)
         } else if (url === URL_LOGOUT) {
+          console.log('đây')
+
           clearLS()
+          // this.navigate(path.home)
         }
         return response
       },
