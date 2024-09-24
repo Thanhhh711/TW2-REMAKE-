@@ -10,15 +10,18 @@ interface AppContextInterface {
   refreshToken: string
   setRefreshToken: React.Dispatch<React.SetStateAction<string>>
   reset: () => void
+  token: string
+  setToken: React.Dispatch<React.SetStateAction<string>>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const getInitialAppContext: () => AppContextInterface = () => ({
   isAuthenticated: Boolean(getAccessTokenFormLS()),
   setIsAuthenticated: () => null,
   profile: getProfileFromLS(),
   setProfile: () => null,
-  extendedPurchases: [],
-  setExtendedPurchases: () => null,
+  token: '',
+  setToken: () => null,
   refreshToken: getRefreshTokenFormLS() || '',
   setRefreshToken: () => null,
   reset: () => null
@@ -32,6 +35,8 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }: { ch
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(defaultValue.isAuthenticated)
   const [profile, setProfile] = useState<User | null>(defaultValue.profile)
   const [refreshToken, setRefreshToken] = useState<string>(initialAppContext.refreshToken)
+
+  const [token, setToken] = useState<string>('') // thằng này được dùng để lưu các token
   const reset = () => {
     setIsAuthenticated(false)
 
@@ -45,6 +50,8 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }: { ch
         setIsAuthenticated,
         profile,
         setProfile,
+        token,
+        setToken,
         refreshToken,
         setRefreshToken,
         reset

@@ -4,5 +4,8 @@ export const path = {
   chat: 'chat',
   login: '/login',
   formLogin: '/formLogin',
-  main: '/main'
+  main: '/main',
+  forgotPassword: '/forgotPassword',
+  resetPassword: '/resetPassword',
+  ChangePassword: '/changePassword'
 } as const

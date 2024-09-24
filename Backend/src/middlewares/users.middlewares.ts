@@ -151,7 +151,7 @@ const forgotPasswordTokenSchema: ParamSchema = {
         console.log(111)
 
         throw new ErrorWithStatus({
-          status: HTTP_STATUS.UNAUTHORIZED,
+          status: HTTP_STATUS.UNAUTHORIZED, // 401
           message: USERS_MESSAGES.FORGOT_PASSWORD_TOKEN_IS_REQUIRED
         })
       }
@@ -464,11 +464,14 @@ export const verifyForgotPasswordValidator = validate(
 )
 
 export const resetPassWordValidator = validate(
-  checkSchema({
-    password: passwordSchema,
-    confirm_password: confirmPassWordSchema,
-    forgot_password_token: forgotPasswordTokenSchema
-  })
+  checkSchema(
+    {
+      password: passwordSchema,
+      confirm_password: confirmPassWordSchema,
+      forgot_password_token: forgotPasswordTokenSchema
+    },
+    ['body']
+  )
 )
 
 export const verifyUserValidator = (

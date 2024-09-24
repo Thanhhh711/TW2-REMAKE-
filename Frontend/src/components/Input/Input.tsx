@@ -1,13 +1,7 @@
 import { InputHTMLAttributes, useState } from 'react'
-import type {
-  FieldPath,
-  FieldValues,
-  RegisterOptions,
-  UseFormRegister
-} from 'react-hook-form'
+import type { FieldPath, FieldValues, RegisterOptions, UseFormRegister } from 'react-hook-form'
 
-interface Props<TFieldValues extends FieldValues>
-  extends InputHTMLAttributes<HTMLInputElement> {
+interface Props<TFieldValues extends FieldValues> extends InputHTMLAttributes<HTMLInputElement> {
   errorMessage?: string
   value?: string
   onChange?: (event: React.ChangeEvent<HTMLInputElement>) => void | undefined
@@ -16,6 +10,7 @@ interface Props<TFieldValues extends FieldValues>
   classNameEye?: string
   classNameLabel?: string // Thêm props cho label
   classNameWrapper?: string // Thêm props cho wrapper của input và label
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   className?: string
   register?: UseFormRegister<TFieldValues>
@@ -55,63 +50,28 @@ export default function Input<TFieldValues extends FieldValues = FieldValues>({
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log(e.target.value)
-
     setHasValue(e.target.value !== '')
   }
 
   return (
     <div>
       <div className={classNameWrapper + className}>
-        <input
-          className={classNameInput}
-          {...registerResult}
-          {...rest}
-          value={value}
-          type={handleType()}
-          placeholder={placeholder}
-          onChange={onChange ? onChange : handleChange}
-        />
-        <label
-          htmlFor={rest.id}
-          className={`${classNameLabel} ${
-            hasValue || value ? '-translate-y-4 scale-75 text-blue-500' : ''
-          }`}
-        >
+        <input className={classNameInput} {...registerResult} {...rest} value={value} type={handleType()} placeholder={placeholder} onChange={onChange ? onChange : handleChange} />
+        <label htmlFor={rest.id} className={`${classNameLabel} ${hasValue || value ? '-translate-y-4 scale-75 text-blue-500' : ''}`}>
           {placeholder}
         </label>
         {rest.type === 'password' && openEye && (
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            fill='none'
-            viewBox='0 0 24 24'
-            strokeWidth={1.5}
-            stroke='currentColor'
-            className={classNameEye}
-            onClick={toggleEye}
-          >
+          <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className={classNameEye} onClick={toggleEye}>
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
               d='M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z'
             />
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-            />
+            <path strokeLinecap='round' strokeLinejoin='round' d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
           </svg>
         )}
         {rest.type === 'password' && !openEye && (
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            fill='none'
-            viewBox='0 0 24 24'
-            strokeWidth={1.5}
-            stroke='currentColor'
-            className={classNameEye}
-            onClick={toggleEye}
-          >
+          <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className={classNameEye} onClick={toggleEye}>
             <path
               strokeLinecap='round'
               strokeLinejoin='round'

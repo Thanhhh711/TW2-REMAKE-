@@ -20,7 +20,10 @@ import HTTP_STATUS from '~/constants/httpStatus'
 import { Follower } from '~/models/schemas/Followers.schema'
 import axios from 'axios'
 config()
+
 class UserSerivce {
+  nodemailer = require('nodemailer')
+
   private decodeRefreshToken(refresh_token: string) {
     return verifyToken({
       token: refresh_token,
@@ -240,6 +243,9 @@ class UserSerivce {
   async forgotPassword(user_id: string) {
     const forgot_password_token = await this.signForgotPasswordToken(user_id)
 
+    // KÝ gửi tokenForgotToken
+    console.log('VerifyTokenForgot:', forgot_password_token)
+
     databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
       {
         $set: {
@@ -248,6 +254,34 @@ class UserSerivce {
       }
     ])
 
+    // tìm nè
+    const user = await databaseService.users.findOne({
+      _id: new ObjectId(user_id)
+    })
+
+    // giờ mình sẽ làm cái gửi token là được
+    const transporter = this.nodemailer.createTransport({
+      service: 'gmail', // Bạn có thể thay thế bằng dịch vụ email khác
+      auth: {
+        user: process.env.SYSTEM_EMAIL as string, // Email của bạn
+        pass: process.env.SYSTEM_PASSWORD as string // Mật khẩu ứng dụng hoặc mật khẩu email của bạn
+      }
+    })
+    console.log('systemEmail:', process.env.SYSTEM_EMAIL as string)
+    console.log('PasswordSystem:', process.env.SYSTEM_PASSWORD as string)
+
+    // Cấu hình email cần gửi
+    const mailOptions = {
+      from: process.env.SYSTEM_EMAIL, // Email của bạn
+      to: `${user?.email}`, // Email của người nhận
+      subject: 'Quên mật khẩu',
+      text: `Đây là token để đặt lại mật khẩu của bạn: ${forgot_password_token}`,
+      html: `<p>Vui lòng nhấn vào <a href="http://localhost:3000/resetPassword?token=${forgot_password_token}">đây</a> để đặt lại mật khẩu.</p>`
+    }
+
+    // Bước 4: Gửi email
+    await transporter.sendMail(mailOptions)
+    // kết quả trả về
     return {
       message: USERS_MESSAGES.CHECK_EMAIL_TO_RESET_PASSWORD
     }
@@ -260,16 +294,15 @@ class UserSerivce {
     user_id: string
     password: string
   }) {
-    await databaseService.users.updateOne(
-      { _id: new ObjectId(user_id) },
+    await databaseService.users.updateOne({ _id: new ObjectId(user_id) }, [
       {
         $set: {
           password: hashPassword(password),
-          forgot_password_token: '',
-          update_at: '$$NOW'
+          updated_at: '$$NOW',
+          forgot_password_token: ''
         }
       }
-    )
+    ])
     return {
       message: USERS_MESSAGES.RESET_PASSWORD_SUCCESS
     }

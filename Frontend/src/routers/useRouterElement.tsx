@@ -7,19 +7,22 @@ import { AppContext } from '../contexts/app.context'
 import Chat from '../pages/Chat/Chat'
 import Login from '../pages/Login'
 import LoginGG from '../pages/LoginGG/LoginGG'
-
-function ProtectedRoute() {
-  const { isAuthenticated } = useContext(AppContext)
-  return isAuthenticated ? <Outlet /> : <Navigate to={path.home} />
-}
-
-function RejectedRoute() {
-  const { isAuthenticated } = useContext(AppContext)
-
-  return !isAuthenticated ? <Outlet /> : <Navigate to={path.chat} />
-}
+import ForgotPassWord from '../pages/ForgotPassWord'
+import ResetPassword from '../pages/ResetPassword'
+import ChangePassword from '../pages/ChangePassWord'
 
 export default function useRouterElement() {
+  function ProtectedRoute() {
+    const { isAuthenticated } = useContext(AppContext)
+    return isAuthenticated ? <Outlet /> : <Navigate to={path.home} />
+  }
+
+  function RejectedRoute() {
+    const { isAuthenticated } = useContext(AppContext)
+
+    return !isAuthenticated ? <Outlet /> : <Navigate to={path.chat} />
+  }
+
   const routesElement = useRoutes([
     {
       path: '',
@@ -39,6 +42,18 @@ export default function useRouterElement() {
         {
           path: path.login,
           element: <Login />
+        },
+        {
+          path: path.forgotPassword,
+          element: <ForgotPassWord />
+        },
+        {
+          path: path.resetPassword,
+          element: <ResetPassword />
+        },
+        {
+          path: path.ChangePassword,
+          element: <ChangePassword />
         }
       ]
     },

@@ -148,3 +148,5 @@ export default function Chat() {
     </div>
   )
 }
+
+// docker run --name mysql-8.0.39 -p 3306:3006 -e MYSQL_ROOT_PASSWORD=root -d mysql:8.0.39-debian
