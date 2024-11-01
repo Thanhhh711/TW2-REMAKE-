@@ -1,5 +1,6 @@
 import { config } from 'dotenv' // này phải install nha
 import { Collection, Db, MongoClient } from 'mongodb'
+import { Bookmark } from '~/models/schemas/Bookmark.schema'
 import Conversation from '~/models/schemas/Conversations.schema'
 import { Follower } from '~/models/schemas/Followers.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
@@ -69,6 +70,10 @@ class DatabaseService {
 
   get hashtags(): Collection<Hashtag> {
     return this.db.collection(process.env.DB_HASHTAGS_COLLECTION as string)
+  }
+
+  get bookmarks(): Collection<Bookmark> {
+    return this.db.collection(process.env.DB_BOOKMARKS_COLLECTION as string)
   }
 
   async indexRefreshTokens() {
