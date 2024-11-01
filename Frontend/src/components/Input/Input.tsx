@@ -10,8 +10,6 @@ interface Props<TFieldValues extends FieldValues> extends InputHTMLAttributes<HT
   classNameEye?: string
   classNameLabel?: string // Thêm props cho label
   classNameWrapper?: string // Thêm props cho wrapper của input và label
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   className?: string
   register?: UseFormRegister<TFieldValues>
   rules?: RegisterOptions
@@ -24,11 +22,15 @@ export default function Input<TFieldValues extends FieldValues = FieldValues>({
   name,
   rules,
   register,
-  classNameInput = 'peer h-[4rem] pl-2 w-[18rem] bg-black text-white border border-gray-600 rounded-md focus:border-blue-500 focus:outline-none focus:ring-0 placeholder-transparent',
-  classNameError = ' absolute text-red-500 rounded-full  mt-48 text-[10px]',
+  classNameInput = `peer h-[4rem] pl-2 w-[18rem] bg-black text-white border ${
+    errorMessage ? 'border-red-600  ' : 'border-gray-600'
+  } rounded-md focus:border-blue-500 focus:outline-none focus:ring-0 placeholder-transparent`,
+  classNameError = 'absolute text-red-500 rounded-full mt-48 text-[10px]',
   classNameEye = 'absolute top-[1.5rem] right-[4px] mr-[0.5rem] h-5 w-5 cursor-pointer',
-  classNameLabel = 'absolute top-5 left-2 text-gray-400 transition-transform duration-300 ease-in-out transform scale-75 origin-top-left peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500 peer-placeholder-shown:top-5 peer-placeholder-shown:left-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-400 peer-valid:top-1 peer-valid:left-2 peer-valid:text-blue-500',
-  classNameWrapper = 'relative  my-4', // Thêm class cho wrapper
+  classNameLabel = `absolute top-5 left-2 text-gray-400 transition-transform duration-300 ease-in-out transform scale-75 origin-top-left peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500 peer-placeholder-shown:top-5 peer-placeholder-shown:left-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown: ${
+    errorMessage ? 'text-red-400' : 'text-gray-400'
+  } peer-valid:top-1 peer-valid:left-2 peer-valid:text-blue-500`,
+  classNameWrapper = 'relative my-4',
   placeholder,
   value,
   onChange,
@@ -36,7 +38,10 @@ export default function Input<TFieldValues extends FieldValues = FieldValues>({
 }: Props<TFieldValues>) {
   const [openEye, setOpenEye] = useState(false)
   const [hasValue, setHasValue] = useState(false)
+  const [charCount, setCharCount] = useState(0) // State để đếm số ký tự
   const registerResult = register && name ? register(name, rules) : null
+
+  const { VITE_MAX_LENGHTH } = import.meta.env
 
   const toggleEye = () => {
     setOpenEye((prev) => !prev)
@@ -50,15 +55,54 @@ export default function Input<TFieldValues extends FieldValues = FieldValues>({
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setHasValue(e.target.value !== '')
+    const inputValue = e.target.value
+
+    setHasValue(inputValue !== '')
+    setCharCount(inputValue.length) // Update character count when typing
+
+    if (onChange) {
+      onChange(e) // Pass the event object to the onChange handler
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    console.log(e)
+
+    // Các phím điều hướng (Arrow keys), Tab, Home, End
+    const allowedKeys = ['Backspace', 'Delete', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End']
+
+    if (name === 'name' && charCount >= VITE_MAX_LENGHTH && !allowedKeys.includes(e.key)) {
+      // preventDefault dùng chặn sự kiện nhập bất kỳ kí tự nào
+      e.preventDefault() // Ngăn không cho nhập thêm ký tự khi đã đạt giới hạn
+    }
   }
 
   return (
-    <div>
+    <div className={classNameWrapper + ' relative'}>
       <div className={classNameWrapper + className}>
-        <input className={classNameInput} {...registerResult} {...rest} value={value} type={handleType()} placeholder={placeholder} onChange={onChange ? onChange : handleChange} />
+        {/* Div hiển thị số ký tự ở góc phải trên cùng */}
+
+        {name === 'name' ? (
+          <div className='absolute top-0 right-1 text-slate-500 text-xs p-1'>
+            {charCount}/{VITE_MAX_LENGHTH}
+          </div>
+        ) : (
+          ''
+        )}
+
+        <input
+          className={classNameInput}
+          {...registerResult}
+          {...rest}
+          value={name === 'name' ? value?.slice(0, 50) : value}
+          type={handleType()}
+          placeholder={placeholder}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown} // chặn sự kiện nhấn xuống
+          maxLength={50}
+        />
         <label htmlFor={rest.id} className={`${classNameLabel} ${hasValue || value ? '-translate-y-4 scale-75 text-blue-500' : ''}`}>
-          {placeholder}
+          <span className={`${errorMessage ? ' text-red-600' : ''}`}>{placeholder}</span>
         </label>
         {rest.type === 'password' && openEye && (
           <svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' strokeWidth={1.5} stroke='currentColor' className={classNameEye} onClick={toggleEye}>

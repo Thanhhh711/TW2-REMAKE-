@@ -5,10 +5,17 @@ import { Link } from 'react-router-dom'
 import '../../App.css'
 import Footer from '../../components/Footer'
 import Login from '../Login'
+import Register from '../Register'
 
 export default function Home() {
   const [beap, setBeap] = useState(false)
   const [showLogin, setShowLogin] = useState(false)
+  const [showRegister, setShowRegister] = useState(false)
+
+  const handleOpenRegister = () => {
+    setShowLogin(false)
+    setShowRegister(true)
+  }
 
   const handleBeap = () => {
     setBeap((prev) => !prev)
@@ -68,8 +75,10 @@ export default function Home() {
                 </div>
 
                 <div className='my-1 justify-start flex-nowrap'>
-                  <div className=' ml-0   '>
-                    <button className='text-white my-2 font-bold rounded-3xl  block bg-blue-400 text-center w-[18rem] h-[2.5rem] hover:bg-blue-600'>Tạo tài khoản</button>
+                  <div className=' ml-0  flex items-center  '>
+                    <button onClick={() => setShowRegister(true)} className='text-white py-3  my-2 font-bold rounded-3xl  block bg-blue-400 text-center w-[18rem] h-[2.5rem] hover:bg-blue-600'>
+                      Tạo tài khoản
+                    </button>
                   </div>
                   <div className='text-left flex mt-3 text-[10px]'>
                     <span className='text-slate-400'>
@@ -101,7 +110,8 @@ export default function Home() {
         </div>
       </div>
       {/* Hiển thị Login component khi nhấn nút "Đăng nhập" */}
-      {showLogin && <Login onClose={() => setShowLogin(false)} />}
+      {showLogin && <Login onClose={() => setShowLogin(false)} handleOpendRegister={handleOpenRegister} />}
+      {showRegister && <Register onClose={() => setShowRegister(false)} />}
       <Footer />
     </div>
   )

@@ -2,31 +2,35 @@ import { yupResolver } from '@hookform/resolvers/yup'
 import { useMutation } from '@tanstack/react-query'
 import React, { useContext, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import authApi from '../../api/auth.api'
 import Input from '../../components/Input'
 import { path } from '../../constants/path'
 import { AppContext } from '../../contexts/app.context'
+import { User } from '../../types/user.type'
+import { ErrorResponse } from '../../types/utils.type'
 import { schema, Schema } from '../../utils/rules'
 import { isAxiosUnprocessableEntityError } from '../../utils/utils'
-import { ErrorResponse } from '../../types/utils.type'
-import { User } from '../../types/user.type'
 
 import { toast } from 'sonner'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import Register from '../Register'
 
 interface Props {
   email?: string
   onClose?: () => void
+  handleOpendRegister: () => void
 }
 
 type FormData = Pick<Schema, 'email' | 'password'>
 const loginSchema = schema.pick(['email', 'password'])
 
-export default function FormLogin({ email, onClose }: Props) {
+export default function FormLogin({ email, onClose, handleOpendRegister }: Props) {
+  const [showRegister, setShowRegister] = useState(false)
   const { setIsAuthenticated, setProfile } = useContext(AppContext)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let timeoutId: ReturnType<typeof setTimeout>
   const navigate = useNavigate()
+
   const {
     register,
     handleSubmit,
@@ -37,10 +41,6 @@ export default function FormLogin({ email, onClose }: Props) {
   })
 
   const [password, setPassword] = useState('')
-
-  const handlBack = () => {
-    navigate(path.home)
-  }
 
   const handleChangePassword = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(event.target.value as string)
@@ -131,7 +131,7 @@ export default function FormLogin({ email, onClose }: Props) {
                     <div className='  relative h-[4rem]  '>
                       <Input
                         classNameInput='peer p-2 h-[4rem] pl-2 w-[18rem] bg-black text-white border border-gray-600 rounded-md focus:border-blue-500 focus:outline-none focus:ring-0 placeholder-transparent'
-                        classNameLabel='absolute top-0 left-2 text-gray-400 transition-transform duration-300 ease-in-out transform scale-75 origin-top-left peer-focus:-translate-y-1 peer-focus:scale-75 peer-focus:text-blue-500 peer-placeholder-shown:top-5 peer-placeholder-shown:left-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-400 peer-valid:top-2 peer-valid:left-2 peer-valid:text-blue-500'
+                        classNameLabel='absolute top-5 left-2 text-gray-400 transition-transform duration-300 ease-in-out transform scale-75 origin-top-left peer-focus:-translate-y-4 peer-focus:scale-75 peer-focus:text-blue-500 peer-placeholder-shown:top-5 peer-placeholder-shown:left-2 peer-placeholder-shown:scale-100 peer-placeholder-shown:translate-y-0 peer-placeholder-shown:text-gray-400 peer-valid:top-5 peer-valid:left-2 peer-valid:text-blue-500'
                         classNameError='absolute   text-red-500 rounded-full  mt-48 text-[10px]'
                         type='password'
                         id='password'
@@ -165,16 +165,13 @@ export default function FormLogin({ email, onClose }: Props) {
           </body>
           <footer className=' '>
             <span className='text-slate-300 text-sm text-left'>Không có tài khoản?</span>
-            <Link to={path.home} className='text-blue-500 hover:underline'>
+            <button onClick={handleOpendRegister} className='text-blue-500 hover:underline'>
               Đăng Ký
-            </Link>
+            </button>
           </footer>
-
-          <button className=' justify-start flex pl-5' onClick={handlBack}>
-            <FontAwesomeIcon icon={faArrowLeft} />
-          </button>
         </div>
       </div>
+      {showRegister && <Register onClose={() => setShowRegister(false)} />}
     </div>
   )
 }

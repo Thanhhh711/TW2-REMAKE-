@@ -54,8 +54,8 @@ class Http {
           this.refreshToken = data.result.refresh_token
           console.log('refreshToken', data.result.refresh_token)
 
+          //  Lưu local nè
           saveAccessTokenToLS(this.accessToken)
-
           saveRefreshTokenToLS(this.refreshToken)
           setProfileToLS(data.result.user)
         } else if (url === URL_LOGOUT) {

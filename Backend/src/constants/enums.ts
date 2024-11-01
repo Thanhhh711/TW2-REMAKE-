@@ -11,6 +11,8 @@ export enum TokenType {
   EmailVerifyToken
 }
 
+//  tại meida của mình thì có 2 dạng
+//  HÌNH ẢNH và video
 export enum MediaType {
   Image, //0
   Video //1

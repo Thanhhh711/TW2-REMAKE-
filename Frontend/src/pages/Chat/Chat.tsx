@@ -6,7 +6,6 @@ import { path } from '../../constants/path'
 import { AppContext } from '../../contexts/app.context'
 import { getRefreshTokenFormLS } from '../../utils/auth'
 import socket from '../../utils/socket'
-import { User } from '../../types/user.type'
 interface Conversation {
   content?: string
   isSender?: boolean
@@ -104,7 +103,7 @@ export default function Chat() {
 
   const getProfile = (name: string) => {
     authApi.getProfile({ name }).then((res) => {
-      const user = res.data.result as User
+      const user = res.data.result.user
 
       setReceiver(user._id) //nếu lấy đc thì lưu vào biến receiver
       alert(`bạn đang chat với ${user.email}`)

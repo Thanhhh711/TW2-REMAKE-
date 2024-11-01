@@ -6,3 +6,7 @@ export type AuthResponse = SuccessResponse<{
   refresh_token: string
   user: User
 }>
+
+export type GetProfileResponse = SuccessResponse<{
+  user: User
+}>

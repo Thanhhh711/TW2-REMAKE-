@@ -9,33 +9,17 @@ export function isAxiosError<T>(error: unknown): error is AxiosError<T> {
 }
 
 //  đây là hàm dùng để check lỗi có phải 422
-export function isAxiosUnprocessableEntityError<FromError>(
-  error: unknown
-): error is AxiosError<FromError> {
-  return (
-    isAxiosError(error) &&
-    error.response?.status === HttpStatusCode.UnprocessableEntity
-  )
+export function isAxiosUnprocessableEntityError<FromError>(error: unknown): error is AxiosError<FromError> {
+  return isAxiosError(error) && error.response?.status === HttpStatusCode.UnprocessableEntity
 }
 
 //  đây là hàm dùng để check lỗi có phải 401
-export function isAxiosUnauthorizedError<UnauthorizedError>(
-  error: unknown
-): error is AxiosError<UnauthorizedError> {
-  return (
-    isAxiosError(error) &&
-    error.response?.status === HttpStatusCode.Unauthorized
-  )
+export function isAxiosUnauthorizedError<UnauthorizedError>(error: unknown): error is AxiosError<UnauthorizedError> {
+  return isAxiosError(error) && error.response?.status === HttpStatusCode.Unauthorized
 }
 //  đây là hàm dùng để check lỗi có phải 401
-export function isAxiosExpiredTokenError<UnauthorizedError>(
-  error: unknown
-): error is AxiosError<UnauthorizedError> {
-  return (
-    isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(
-      error
-    ) && error.response?.data.message === 'EXPIRED_TOKEN'
-  )
+export function isAxiosExpiredTokenError<UnauthorizedError>(error: unknown): error is AxiosError<UnauthorizedError> {
+  return isAxiosUnauthorizedError<ErrorResponse<{ name: string; message: string }>>(error) && error.response?.data.message === 'EXPIRED_TOKEN'
 }
 
 //  đây 2 hàm dung để biến đổi tiền và số lượng bán hàng bằng js
@@ -58,8 +42,7 @@ export function FormatNumberToSocialStyle(value: number) {
 // export function rateSale
 //  thì nó sẽ không sử dụng đc arrow function
 
-export const rateSale = (original: number, sale: number) =>
-  Math.round(((original - sale) / original) * 100) + '%'
+export const rateSale = (original: number, sale: number) => Math.round(((original - sale) / original) * 100) + '%'
 
 // # Ghi chú code
 

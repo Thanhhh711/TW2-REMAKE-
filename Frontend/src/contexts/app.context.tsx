@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useState } from 'react'
 import { User } from '../types/user.type'
 import { getAccessTokenFormLS, getProfileFromLS, getRefreshTokenFormLS } from '../utils/auth'
@@ -12,9 +13,10 @@ interface AppContextInterface {
   reset: () => void
   token: string
   setToken: React.Dispatch<React.SetStateAction<string>>
+  formData: any // Cho phép data chứa bất kỳ loại dữ liệu nào
+  setFormData: React.Dispatch<React.SetStateAction<any>>
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const getInitialAppContext: () => AppContextInterface = () => ({
   isAuthenticated: Boolean(getAccessTokenFormLS()),
   setIsAuthenticated: () => null,
@@ -24,7 +26,9 @@ export const getInitialAppContext: () => AppContextInterface = () => ({
   setToken: () => null,
   refreshToken: getRefreshTokenFormLS() || '',
   setRefreshToken: () => null,
-  reset: () => null
+  reset: () => null,
+  formData: null,
+  setFormData: () => null
 })
 
 const initialAppContext = getInitialAppContext()
@@ -35,11 +39,11 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }: { ch
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(defaultValue.isAuthenticated)
   const [profile, setProfile] = useState<User | null>(defaultValue.profile)
   const [refreshToken, setRefreshToken] = useState<string>(initialAppContext.refreshToken)
+  const [token, setToken] = useState<string>(initialAppContext.refreshToken) // thằng này được dùng để lưu các token
+  const [formData, setFormData] = useState<any>(initialAppContext.formData)
 
-  const [token, setToken] = useState<string>('') // thằng này được dùng để lưu các token
   const reset = () => {
     setIsAuthenticated(false)
-
     setProfile(null)
   }
 
@@ -54,7 +58,9 @@ export const AppProvider = ({ children, defaultValue = initialAppContext }: { ch
         setToken,
         refreshToken,
         setRefreshToken,
-        reset
+        reset,
+        formData,
+        setFormData
       }}
     >
       {children}

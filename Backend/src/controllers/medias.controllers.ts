@@ -16,10 +16,22 @@ export const uploadImageController = async (req: Request, res: Response) => {
 }
 
 export const serveImageController = async (req: Request, res: Response) => {
+  //   Đây là cái hình ảnh mà người ta muốn xxem
   const { namefile } = req.params //lấy namefile từ param string
-  res.sendFile(path.resolve(UPLOAD_IMAGE_DIR, namefile), (error) => {
+  return res.sendFile(path.resolve(UPLOAD_IMAGE_DIR, namefile), (error) => {
+    //   Nếu mà có phát sinh ra lỗi
     if (error) {
-      res.status((error as any).status).send('Image not found')
+      return res.status((error as any).status).send('Image not found')
+    }
+  })
+}
+
+export const serveVideoController = async (req: Request, res: Response) => {
+  const { namefile } = req.params
+
+  return res.sendFile(path.resolve(UPLOAD_VIDEO_DIR, namefile), (error) => {
+    if (error) {
+      return res.status((error as any).status).send('Video not found')
     }
   })
 }

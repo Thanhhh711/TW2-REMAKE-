@@ -14,14 +14,17 @@ import {
 class MediasService {
   async uploadImage(req: Request) {
     //lưu ảnh vào trong uploads/temp
+
     const files = await handleUploadImage(req)
     // xử lý fiel bằng sharp giúp tối ưu hình ảnh
     const result: Media[] = await Promise.all(
+      // mình sẽ lấy từng phần tử ở trong đây lấy, để cấu hình nó thành obj có dạng
+      // là type và url
       files.map(async (file) => {
         const newFilename = getNameFromFullname(file.newFilename) + '.jpg'
         const newPath = UPLOAD_IMAGE_DIR + '/' + newFilename
         const info = await sharp(file.filepath).jpeg().toFile(newPath)
-        // xóa file temp
+        // xóa file các ảnh  trong temp
         fs.unlinkSync(file.filepath)
 
         //  return qua routes statics để lưu ảnh
@@ -33,20 +36,25 @@ class MediasService {
         }
       })
     )
+
     return result
   }
 
   async uploadVideo(req: Request) {
+    //  này lưu video trong uploadvideo
     const files = await handleUploadVideo(req)
 
+    //  thằng này xử lý và trả Url
     const result: Media[] = await Promise.all(
       files.map(async (video) => {
+        // lấy cái tên mới
         const { newFilename } = video
+
         return {
           url: isProduction
             ? `${process.env.HOST}/static/video/${newFilename}`
             : `http://localhost:${process.env.PORT}/static/video/${newFilename}`,
-          type: MediaType.Video
+          type: MediaType.Video //1
         }
       })
     )

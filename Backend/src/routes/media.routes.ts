@@ -10,16 +10,17 @@ import {
 } from '~/middlewares/users.middlewares'
 
 const mediasRouter = Router()
+
 mediasRouter.post(
   '/upload-image',
-  accessTokenValidator,
+  accessTokenValidator, // phải đăng nhập rồi mới cho
   verifyUserValidator,
   wrapAsync(uploadImageController)
 )
 
 mediasRouter.post(
   '/upload-video',
-  accessTokenValidator,
+  accessTokenValidator, // đăng nhập rồi mới cho up video
   verifyUserValidator,
   wrapAsync(uploadVideoController)
 ) // uploadVideoController chưa làm

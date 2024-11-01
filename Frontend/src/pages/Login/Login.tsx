@@ -10,15 +10,19 @@ import { schema, Schema } from '../../utils/rules'
 import FormLogin from './FormLogin'
 import FormForgotPassWord from '../ForgotPassWord'
 import { motion } from 'framer-motion'
+import Register from '../Register'
 interface Props {
   onClose?: () => void
   buttonBack?: false
+  handleOpendRegister?: () => void
 }
 
 type FormData = Pick<Schema, 'email'>
 const loginSchema = schema.pick(['email'])
 
-export default function Login({ onClose, buttonBack }: Props) {
+export default function Login({ onClose, buttonBack, handleOpendRegister }: Props) {
+  const [showRegister, setShowRegister] = useState(false)
+
   const [openForgotPassWord, setOpenForgotPassWord] = useState(false)
   const {
     register,
@@ -38,27 +42,20 @@ export default function Login({ onClose, buttonBack }: Props) {
 
   const handleChangeEmail = (event: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(event.target.value as string)
-    console.log(event.target.value as string)
-
-    console.log(openFormLogin)
   }
 
   const changeFormForgotPassword = () => {
     setOpenForgotPassWord((prev) => !prev)
   }
 
-  const handleOpenFormLogin = handleSubmit((data) => {
+  const handleOpenFormLogin = handleSubmit((data: FormData) => {
     console.log(data)
 
-    console.log(111)
-
-    setOpenFormLogin(true)
-
-    console.log(openFormLogin)
+    if (!errors.email) setOpenFormLogin(true)
   })
 
   // Tính toán lớp mt dựa trên sự tồn tại lỗi
-  const mtClass = errors.email ? 'mt-3' : 'mt-1'
+  const mtClass = errors.email ? 'mb-6' : 'mb-3'
 
   const getGoogleAuthUrl = () => {
     const { VITE_GOOGLE_CLIENT_ID, VITE_GOOGLE_REDIRECT_URI } = import.meta.env //import vào .env của Vite
@@ -77,13 +74,14 @@ export default function Login({ onClose, buttonBack }: Props) {
 
   const googleOAuthUrl = getGoogleAuthUrl()
 
-  if (openFormLogin) return <FormLogin email={email} onClose={onClose} />
+  if (openFormLogin) return <FormLogin handleOpendRegister={handleOpendRegister ? handleOpendRegister : () => {}} email={email} onClose={onClose} />
+
   return buttonBack ? (
     <motion.div
       initial={{ x: '50vw' }} // Trang bắt đầu ngoài khung nhìn bên trái
       animate={{ x: 0 }} // Trượt vào khung nhìn
       exit={{ x: '100vw' }} // Trượt ra khỏi khung nhìn sang phải
-      transition={{ duration: 0.5 }}
+      transition={{ duration: 0.5 }} // di chuyển chậm
     >
       <div className='fixed top-0 left-0 w-full h-full  bg-blue-400 bg-opacity-20 flex justify-center items-center z-50'>
         <div className='relative    p-6 rounded-lg'>
@@ -179,7 +177,7 @@ export default function Login({ onClose, buttonBack }: Props) {
               X
             </button>
 
-            {/* Logo đây nha Trung*/}
+            {/* Logo đây nha */}
             <div className='w-[2rem] mx-auto'>
               <svg viewBox='0 0 24 24' aria-label='Icon' role='img' fill='white'>
                 <g>
@@ -205,8 +203,9 @@ export default function Login({ onClose, buttonBack }: Props) {
               <div className='text-white mx-3 font-segoe'>Hoặc</div>
               <div className='text-white'> ------------------</div>
             </div>
+
             <div className='bg-black p-4'>
-              <div className='justify-center flex'>
+              <div className={`justify-center flex ${mtClass} `}>
                 <div className='relative mb-4 border-gray-600 h-[4rem]'>
                   <Input
                     type='email'
@@ -223,7 +222,8 @@ export default function Login({ onClose, buttonBack }: Props) {
                   />
                 </div>
               </div>
-              <button onClick={handleOpenFormLogin} className={`bg-white text-black border-2 p-2 rounded-2xl w-[15rem] font-segoe font-bold hover:bg-slate-300 ${mtClass}`}>
+
+              <button onClick={handleOpenFormLogin} className='mt-1 bg-white text-black border-2 p-2 rounded-2xl w-[15rem] font-segoe font-bold hover:bg-slate-300 '>
                 Tiếp theo
               </button>
             </div>
@@ -233,11 +233,12 @@ export default function Login({ onClose, buttonBack }: Props) {
               Quên mật khẩu
             </button>
           </body>
+
           <footer className=' '>
             <span className='text-slate-300 text-sm text-left'>Không có tài khoản?</span>
-            <Link to={path.formLogin} className='text-blue-500 hover:underline'>
+            <button onClick={handleOpendRegister} className='text-blue-500 hover:underline'>
               Đăng Ký
-            </Link>
+            </button>
           </footer>
 
           {/* Hiển thị Login component khi nhấn nút "Đăng nhập" */}
@@ -250,6 +251,8 @@ export default function Login({ onClose, buttonBack }: Props) {
           )}
         </div>
       </div>
+
+      {showRegister && <Register onClose={() => setShowRegister(false)} />}
     </div>
   )
 }

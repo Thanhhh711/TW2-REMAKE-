@@ -7,5 +7,6 @@ export const path = {
   main: '/main',
   forgotPassword: '/forgotPassword',
   resetPassword: '/resetPassword',
-  ChangePassword: '/changePassword'
+  ChangePassword: '/changePassword',
+  register: '/register'
 } as const

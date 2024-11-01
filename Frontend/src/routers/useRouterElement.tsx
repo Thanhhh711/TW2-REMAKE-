@@ -10,6 +10,7 @@ import LoginGG from '../pages/LoginGG/LoginGG'
 import ForgotPassWord from '../pages/ForgotPassWord'
 import ResetPassword from '../pages/ResetPassword'
 import ChangePassword from '../pages/ChangePassWord'
+import Register from '../pages/Register'
 
 export default function useRouterElement() {
   function ProtectedRoute() {
@@ -39,6 +40,10 @@ export default function useRouterElement() {
           element: <LoginGG />
         },
 
+        {
+          path: path.register,
+          element: <Register />
+        },
         {
           path: path.login,
           element: <Login />

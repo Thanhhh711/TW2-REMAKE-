@@ -1,3 +1,4 @@
+import { log } from 'console'
 import { verifyToken } from './../utils/jwt'
 import { config } from 'dotenv'
 import { Request, Response, NextFunction } from 'express'
@@ -108,7 +109,7 @@ const nameSchema: ParamSchema = {
   isLength: {
     options: {
       min: 1,
-      max: 100
+      max: 50
     },
     errorMessage: USERS_MESSAGES.NAME_LENGTH_MUST_BE_FROM_1_TO_100
   }

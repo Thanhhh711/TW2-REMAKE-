@@ -50,7 +50,6 @@ export default function FormForgotPassWord() {
       // Khi server trả về lỗi dạng `Unprocessable Entity` (422), hiển thị lỗi chi tiết từ server
       if (isAxiosUnprocessableEntityError<ErrorResponse<FormData>>(error)) {
         const formError = error.response?.data.errors
-        console.log(formError)
 
         if (formError) {
           Object.keys(formError).forEach((key) => {
@@ -73,8 +72,6 @@ export default function FormForgotPassWord() {
   // })
 
   const onSubmit = handleSubmit((data: FormData) => {
-    console.log(data)
-
     forgotPasswordMutation.mutate(data)
   })
 
@@ -100,7 +97,7 @@ export default function FormForgotPassWord() {
       <body className='my-auto container w-[35rem]  '>
         <div className='mx-auto'>
           <h2 className='text-white  text-center text-[2rem] font-semibold text-nowrap block my-5 font-segoe'>Tìm tài khoản X của bạn</h2>
-          <span className='text-gray-400 text-[1rem] text-center text-wrap'>Nhập email, số điện thoại hoặc tên người dùng liên kết với tài khoản để thay đổi mật khẩu của bạn.</span>
+          <span className='text-gray-400 text-[1rem] text-center text-wrap'>Nhập email liên kết với tài khoản để thay đổi mật khẩu của bạn.</span>
         </div>
 
         <form action='' onSubmit={onSubmit}>

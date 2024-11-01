@@ -1,8 +1,8 @@
-import { AuthResponse } from '../types/auth.type'
+import { AuthResponse, GetProfileResponse } from '../types/auth.type'
 import http from '../utils/http'
 
 export const URL_LOGIN = 'users/login'
-export const URL_REGISTER = 'register'
+export const URL_REGISTER = 'users/register'
 export const URL_LOGOUT = 'users/logout'
 export const URL_REFRESH_TOKEN = 'refresh-access-token'
 export const URL_GET_USER = 'users/'
@@ -17,7 +17,7 @@ const authApi = {
 
   logoutAccount: async (body: { refresh_token: string }) => await http.post<AuthResponse>(URL_LOGOUT, body),
 
-  getProfile: async (params: { name: string }) => await http.get<AuthResponse>(URL_GET_USER + params.name),
+  getProfile: async (params: { name: string }) => await http.get<GetProfileResponse>(URL_GET_USER + params.name),
 
   forgotPassword: async (body: { email: string }) => await http.post<AuthResponse>(URL_FORGOT_PASSWORD, body),
 
