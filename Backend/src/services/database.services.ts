@@ -1,9 +1,11 @@
-import { Collection, Db, MongoClient, ServerApiVersion } from 'mongodb'
 import { config } from 'dotenv' // này phải install nha
-import User from '~/models/schemas/User.schemas'
-import RefreshToken from '~/models/schemas/RefreshToken.schemas'
-import { Follower } from '~/models/schemas/Followers.schema'
+import { Collection, Db, MongoClient } from 'mongodb'
 import Conversation from '~/models/schemas/Conversations.schema'
+import { Follower } from '~/models/schemas/Followers.schema'
+import Hashtag from '~/models/schemas/Hashtag.schema'
+import RefreshToken from '~/models/schemas/RefreshToken.schemas'
+import Tweet from '~/models/schemas/Tweet.schema'
+import User from '~/models/schemas/User.schemas'
 config() // config này giúp sử dụng biến của file đó
 
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@tw-home3.jbvmt.mongodb.net/?retryWrites=true&w=majority&appName=TW-HOME3`
@@ -31,6 +33,18 @@ class DatabaseService {
     }
   }
 
+  // Đây là lệnh xóa những username bị rỗng
+  async removeUsersWithEmptyUsername() {
+    try {
+      const result = await this.users.deleteMany({ username: '' })
+      console.log(
+        `${result.deletedCount} documents were deleted with empty username.`
+      )
+    } catch (error) {
+      console.error('Error removing users with empty username:', error)
+    }
+  }
+
   get users(): Collection<User> {
     return this.db.collection(process.env.DB_USERS_COLLECTION as string)
   }
@@ -47,6 +61,50 @@ class DatabaseService {
 
   get conversations(): Collection<Conversation> {
     return this.db.collection(process.env.DB_CONVERSATIONS_COLLECTION as string)
+  }
+
+  get tweets(): Collection<Tweet> {
+    return this.db.collection(process.env.DB_TWEETS_COLLECTION as string)
+  }
+
+  get hashtags(): Collection<Hashtag> {
+    return this.db.collection(process.env.DB_HASHTAGS_COLLECTION as string)
+  }
+
+  async indexRefreshTokens() {
+    const exists = await this.refreshTokens.indexExists(['token_1', 'exp_1'])
+    if (exists) return
+
+    await this.refreshTokens.createIndex({ token: 1 })
+    //đây là ttl index , sẽ tự động xóa các document khi hết hạn của exp
+    await this.refreshTokens.createIndex({ exp: 1 }, { expireAfterSeconds: 0 })
+  }
+
+  async indexFollowers() {
+    const exists = await this.followers.indexExists([
+      'user_id_1_followed_user_id_1'
+    ])
+    if (exists) return
+    await this.followers.createIndex({ user_id: 1, followed_user_id: 1 })
+  }
+
+  async indexUsers() {
+    const exists = await this.users.indexExists([
+      '_id_',
+      'email_1',
+      // ---------------
+      // Sắp xếp theo thứ tự tăng dần
+      // Sắp xếp email theo thứ tự tăng dần
+      //  nếu mà email bị trùng
+      //  thì nó sẽ set password
+      'email_1_password_1'
+    ])
+    if (exists) return
+    // unique để tìm kiếm không trùng username và email
+    await this.users.createIndex({ username: 1 }, { unique: true })
+    await this.users.createIndex({ email: 1 }, { unique: true })
+
+    await this.users.createIndex({ email: 1, password: 1 })
   }
 }
 

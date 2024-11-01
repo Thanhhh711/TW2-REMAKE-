@@ -1,18 +1,19 @@
-import express from 'express'
+import cors from 'cors'
 import { config } from 'dotenv'
+import express from 'express'
+import { createServer } from 'http'
+import { ObjectId } from 'mongodb'
+import { Server } from 'socket.io'
 import { defaultErrorHandle } from './middlewares/error.middlewares'
+import Conversation from './models/schemas/Conversations.schema'
+import conversationsRouter from './routes/conversations.routes'
 import mediasRouter from './routes/media.routes'
 import staticRouter from './routes/static.routes'
 import usersRouters from './routes/user.routes'
 import databaseService from './services/database.services'
 import { initFolder } from './utils/file'
-import { UPLOAD_VIDEO_DIR } from './constants/dir'
-import { createServer } from 'http'
-import { Server } from 'socket.io'
-import cors from 'cors'
-import Conversation from './models/schemas/Conversations.schema'
-import { ObjectId } from 'mongodb'
-import conversationsRouter from './routes/conversations.routes'
+import tweetsRouters from './routes/tweets.routes'
+
 const app = express()
 const httpServer = createServer(app)
 config()
@@ -32,7 +33,12 @@ const PORT = process.env.PORT || 4000
 
 app.use(cors(corsOptions))
 
-databaseService.connect()
+//trong file index.ts fix lại hàm connect
+databaseService.connect().then(() => {
+  databaseService.indexUsers()
+  databaseService.indexRefreshTokens()
+  databaseService.indexFollowers()
+})
 
 // localhost 3000
 
@@ -47,7 +53,13 @@ app.use('/users', usersRouters)
 app.use('/medias', mediasRouter)
 app.use('/static', staticRouter)
 app.use('/conversations', conversationsRouter)
-app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
+app.use('/tweets', tweetsRouters)
+
+//  thằng nayf là có sẵn của express nên là load không bị gì
+// app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
+
+app.use('/static', staticRouter)
+
 app.use(defaultErrorHandle)
 
 const io = new Server(httpServer, {
@@ -63,6 +75,7 @@ const users: {
     socket_id: string
   }
 } = {}
+
 io.on('connection', (socket) => {
   console.log(`new client has id: ${socket.id} is connected`)
 

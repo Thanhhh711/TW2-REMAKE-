@@ -117,6 +117,10 @@ export default function Chat() {
         Đăng xuất
       </button>
 
+      <video controls width={500}>
+        <source src='http://localhost:4000/static/video-stream/be3537a8e393b222b5d833b03.mp4' type='video/mp4' />
+      </video>
+
       <div className='container'>
         <h2 className='text-white text-[2rem] font-bold mt-4'>Chat</h2>
 
