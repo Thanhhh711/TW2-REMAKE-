@@ -1,5 +1,9 @@
 import { Router } from 'express'
-import { bookmarkTweetController } from '~/controllers/bookmarks.controllers'
+import {
+  bookmarkTweetController,
+  unbookmarkTweetController
+} from '~/controllers/bookmarks.controllers'
+import { tweetIdValidator } from '~/middlewares/tweets.middlewares'
 import {
   accessTokenValidator,
   verifyUserValidator
@@ -17,9 +21,19 @@ const bookmarksRouter = Router()
 
 bookmarksRouter.post(
   '/',
+  accessTokenValidator, // thằng này check dùng để xem là đã đăng nhập chưa
+  verifyUserValidator, // thằng này check là để xem là người dùng đã verify chưa
+  tweetIdValidator, // chekc xem tweet id có hợp lệ khôngh
+  wrapAsync(bookmarkTweetController)
+)
+
+//  Thằng này dùng để xóa các bài mình đã lưu
+bookmarksRouter.delete(
+  '/:tweet_id',
   accessTokenValidator,
   verifyUserValidator,
-  wrapAsync(bookmarkTweetController)
-) //bookmarkTweetController chưa làm
+  tweetIdValidator,
+  wrapAsync(unbookmarkTweetController)
+)
 
 export default bookmarksRouter

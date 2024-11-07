@@ -1,11 +1,22 @@
 import { checkSchema } from 'express-validator'
 import { isEmpty } from 'lodash'
 import { ObjectId } from 'mongodb'
-import { MediaType, TweetAudience, TweetType } from '~/constants/enums'
-
+import {
+  MediaType,
+  TweetAudience,
+  TweetType,
+  UserVerifyStatus
+} from '~/constants/enums'
+import { Request, Response, NextFunction } from 'express'
 import validate from '~/utils/validation'
-import { TWEETS_MESSAGES } from '~/constants/messages'
+import { TWEETS_MESSAGES, USERS_MESSAGES } from '~/constants/messages'
 import { numberEnumToArray } from '~/utils/common'
+import { ErrorWithStatus } from '~/models/Errors'
+import HTTP_STATUS from '~/constants/httpStatus'
+import databaseService from '~/services/database.services'
+import { wrapAsync } from '~/utils/handlers'
+import Tweet from '~/models/schemas/Tweet.schema'
+import { TokenPayload } from '~/models/requests/User.requests'
 
 const tweetTypes = numberEnumToArray(TweetType) //kq có dạng [0, 1, 2, 3]
 const tweetAudiences = numberEnumToArray(TweetAudience) //kq có dạng [0, 1]
@@ -141,4 +152,91 @@ export const createTweetValidator = validate(
 
     ['body']
   )
+)
+
+// check xem đúng như Id của  tweet không
+export const tweetIdValidator = validate(
+  checkSchema(
+    {
+      tweet_id: {
+        custom: {
+          options: async (value, { req }) => {
+            console.log('value', value)
+            //nếu tweet_id không phải objectId thì báo lỗi
+            if (!ObjectId.isValid(value)) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.BAD_REQUEST, //400
+                message: TWEETS_MESSAGES.INVALID_TWEET_ID //thêm trong messages.ts
+              })
+            }
+
+            //nếu tweet_id không tồn tại thì báo lỗi
+            const tweet = await databaseService.tweets.findOne({
+              _id: new ObjectId(value)
+            })
+
+            if (!tweet) {
+              throw new ErrorWithStatus({
+                status: HTTP_STATUS.NOT_FOUND, //404
+                message: TWEETS_MESSAGES.TWEET_NOT_FOUND //thêm trong messages.ts
+              }) //thêm trong messages.ts
+            }
+
+            // cách này là gửi thử qua bên audiance để check xem user có được xem ha không
+            ;(req as Request).tweet = tweet
+            return true
+          }
+        }
+      }
+    },
+    ['params', 'body']
+  )
+)
+
+export const audienceValidator = wrapAsync(
+  async (req: Request, _res: Response, next: NextFunction) => {
+    //  lấy tweet từ req
+    const tweet = req.tweet as Tweet
+
+    //  kiểu tra xem bài viết đó dành cho user nào được xem => every body thì kh cần check
+    if (tweet.audience == TweetAudience.TwitterCircle) {
+      //  check xem thử người ta có đăng nhập chưa
+      if (!req.decoded_authorization) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.UNAUTHORIZED, // 401
+          message: USERS_MESSAGES.ACCESS_TOKEN_IS_REQUIRED
+        })
+      }
+
+      //  Lấy ra check thử xem là user_id có được sử dụng => check xem thử là có bị banned không
+
+      const { user_id } = req.decoded_authorization as TokenPayload
+
+      const authorUser = await databaseService.users.findOne({
+        _id: new ObjectId(user_id)
+      })
+
+      if (!authorUser || authorUser.verify === UserVerifyStatus.Banned) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.FORBIDDEN, // 403
+          message: USERS_MESSAGES.USER_BANNED
+        })
+      }
+      //  Xem thử xem user có nằm trong danh sách được xem bài không
+      //kiểm tra xem user có nằm trong twitter_circle của authorUser hay không
+      //  Hàm some này trả boolean nếu như thỏa điều kiện
+      const isInTwitterCircle = authorUser.twitter_circle?.some(
+        (user_circle_id) => user_circle_id.equals(user_id)
+      )
+
+      if (!isInTwitterCircle || !authorUser._id.equals(new ObjectId(user_id))) {
+        throw new ErrorWithStatus({
+          status: HTTP_STATUS.FORBIDDEN, //403-
+          message: TWEETS_MESSAGES.TWEET_IS_NOT_PUBLIC
+        })
+      }
+
+      next()
+    }
+  }
 )

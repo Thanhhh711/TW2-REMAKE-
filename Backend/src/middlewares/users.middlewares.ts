@@ -325,7 +325,6 @@ export const accessTokenValidator = validate(
             console.log(value)
 
             const access_token = value.split(' ')[1] // tại chỗ này là bear token nên là phải xóa
-            console.log('access_token', access_token)
 
             if (!access_token) {
               throw new ErrorWithStatus({
@@ -482,7 +481,8 @@ export const verifyUserValidator = (
 ) => {
   const { verify } = req.decoded_authorization as TokenPayload
 
-  if (verify !== UserVerifyStatus.Verified) {
+  if (verify !== UserVerifyStatus.Unverified) {
+    // Check đã verify chưa
     throw new ErrorWithStatus({
       message: USERS_MESSAGES.USER_NOT_VERIFIED,
       status: HTTP_STATUS.FORBIDDEN //403
@@ -684,3 +684,27 @@ export const getConversationValidator = validate(
     ['params']
   )
 )
+
+/*
+  - trước tiên mình giới thiệu về `req.header` và `req.headers`
+    - **`req.header` là của chung hệ thống `backend`** nếu dùng `req.header('authorization')` hay dùng `req.header('Authorization')` thì sẽ lấy được `bearer access_token`
+    - **`req.headers` là của riêng `js`** dựa trên core là `req.header`, lúc xài sẽ là `req.headers.authorization` để có được `bearer access_token`, còn dùng `req.headers.Authorization` thì k đc
+    - vậy tóm lại là `req.header` thì hoa thường thoải mái, còn `req.headers` thì phải viết thường
+  - tiến hành tạo `isUserLoggedInValidator`
+*/
+
+// Tóm lại req.headers chứa các req.header => req.headers là đối tượng của js nên là mình chỉ sử dụng chữ thường cho các
+//  các thuộc tính sử dụng => còn req.header là phương thức cung cấp hầu hết các framework backend => Nên là mình có thể sử dụng chữ hoa thường
+//  điều được cho các thuộc tính
+
+export const isUserLoggedInValidator =
+  (middleware: (req: Request, res: Response, next: NextFunction) => void) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    //nếu có truyền lên authorization thì mới dùng middleware
+    //  check xem thử là có author (token) hay không
+    if (req.headers.authorization) {
+      return middleware(req, res, next)
+    }
+    //không thì mình sẽ next
+    next()
+  }

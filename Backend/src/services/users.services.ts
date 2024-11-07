@@ -150,6 +150,8 @@ class UserSerivce {
       verify: UserVerifyStatus.Unverified //bởi vì dây là đằng ký nên là chưa verify
     })
 
+    console.log('email_verify_token', email_verify_token)
+
     await databaseService.users.insertOne(
       new User({
         ...payload,

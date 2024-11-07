@@ -36,8 +36,6 @@ class TweetsService {
     //ta sẽ dùng map để biến đổi các hashtag(string) thành các id của các hashtag tìm đc hoặc tạo mới
     //findOneAndUpdate là promise nên map sẽ trả về 1 mảng các promise, ta sẽ dùng Promise.all để chờ tất cả các promise
 
-    console.log('check', hashtags)
-
     const hashtagDocument = await Promise.all(
       hashtags.map((hashtag) => {
         return databaseService.hashtags.findOneAndUpdate(

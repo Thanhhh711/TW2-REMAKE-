@@ -37,6 +37,7 @@ export const loginController = async (
     user_id: user_id.toString(),
     verify: user.verify
   })
+
   // throw new Error('Tạo thử 1 cái lỗi nè')
   return res.json({
     message: USERS_MESSAGES.LOGIN_SUCCESS,

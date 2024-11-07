@@ -4,6 +4,7 @@ import { Bookmark } from '~/models/schemas/Bookmark.schema'
 import Conversation from '~/models/schemas/Conversations.schema'
 import { Follower } from '~/models/schemas/Followers.schema'
 import Hashtag from '~/models/schemas/Hashtag.schema'
+import { Like } from '~/models/schemas/Like.schema'
 import RefreshToken from '~/models/schemas/RefreshToken.schemas'
 import Tweet from '~/models/schemas/Tweet.schema'
 import User from '~/models/schemas/User.schemas'
@@ -74,6 +75,11 @@ class DatabaseService {
 
   get bookmarks(): Collection<Bookmark> {
     return this.db.collection(process.env.DB_BOOKMARKS_COLLECTION as string)
+  }
+
+  //tạo DB_LIKES_COLLECTION = 'likes' trong file .env
+  get likes(): Collection<Like> {
+    return this.db.collection(process.env.DB_LIKES_COLLECTION as string)
   }
 
   async indexRefreshTokens() {

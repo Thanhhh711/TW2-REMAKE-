@@ -14,6 +14,7 @@ import databaseService from './services/database.services'
 import { initFolder } from './utils/file'
 import tweetsRouters from './routes/tweets.routes'
 import bookmarksRouter from './routes/bookmarks.routes'
+import likesRoutes from './routes/likes.routes'
 
 const app = express()
 const httpServer = createServer(app)
@@ -56,8 +57,11 @@ app.use('/static', staticRouter)
 app.use('/conversations', conversationsRouter)
 app.use('/tweets', tweetsRouters)
 app.use('/bookmarks', bookmarksRouter) //route handler
+//  routes để like
+app.use('/likes', likesRoutes)
 
 //  thằng nayf là có sẵn của express nên là load không bị gì
+
 // app.use('/static/video', express.static(UPLOAD_VIDEO_DIR))
 
 app.use('/static', staticRouter)

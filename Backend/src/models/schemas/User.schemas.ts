@@ -20,6 +20,7 @@ interface UserType {
   username?: string // optional
   avatar?: string // optional
   cover_photo?: string // optional
+  twitter_circle?: ObjectId[]
 }
 
 export default class User {
@@ -40,6 +41,8 @@ export default class User {
   username: string
   avatar: string
   cover_photo: string
+
+  twitter_circle?: ObjectId[] = [] // optional
   constructor(user: UserType) {
     const date = new Date() //tạo này cho ngày created_at updated_at bằng nhau
     this._id = user._id || new ObjectId() // tự tạo id
@@ -59,5 +62,6 @@ export default class User {
     this.username = user.username || ''
     this.avatar = user.avatar || ''
     this.cover_photo = user.cover_photo || ''
+    this.twitter_circle = user.twitter_circle || [] //thêm
   }
 }
