@@ -3,8 +3,10 @@ import Tweet from '~/models/schemas/Tweet.schema'
 import { ObjectId, WithId } from 'mongodb'
 import { TweetRequestBody } from '~/models/requests/Tweet.request'
 import Hashtag from '~/models/schemas/Hashtag.schema'
+import { TweetType } from '~/constants/enums'
 
 class TweetsService {
+  // tạo tweet
   async createTweet(user_id: string, body: TweetRequestBody) {
     const hashtags = await this.checkAndCreateHashtags(body.hashtags)
 
@@ -48,6 +50,253 @@ class TweetsService {
 
     //  tạo thành obj đ ID
     return hashtagDocument.map((item) => new ObjectId(item?._id))
+  }
+
+  //  hàm này dùng để tằng view của các bài tweet
+  async increaseView(tweet_id: string, user_id?: string) {
+    //    chỗ này nếu như có id thì là người xem tăng lên 1 còn là guest thì 1
+    const inc = user_id ? { user_views: 1 } : { guest_views: 1 }
+
+    const result = await databaseService.tweets.findOneAndUpdate(
+      //  tòm dựa trên id
+      { _id: new ObjectId(tweet_id) },
+      {
+        $inc: inc,
+        //  cập nhật thành thời gian hiện tại
+        $currentDate: { updated_at: true }
+      },
+      // cos nghĩa là sau khi mà cập nhật Document xong
+      // => Thì chúng ta chỉ lấy những thuộc tính này trong kết quả
+
+      // vậy số 1 trong các thuộc tính có nghĩa là gì
+      // => 1 trong các thuộc tính là ý chỉ là chúng ta sẽ lấy đúng những thuộc tính đó
+      // Vậy còn nếu SỐ 0 thì sao
+      // => 0 thì có nghĩa là chúng ta chắn chắn sẽ không cần thuộc tính đó
+      /*
+      
+       => vậy thì khác gì nếu chúng ta không bỏ vào projection  
+          VỚI SÔ 0 VÀ KHÔNG BỎ VÀO PROJECTION
+          _ Không chỉ định một trường trong projection đồng nghĩa với việc loại trừ trường đó một cách ngầm định.
+          chỉ định => nhưng vẫn có thể hiện
+
+
+          _ Chỉ định 0 cho trường giúp bạn loại trừ trường đó một cách rõ ràng.
+      
+      
+      */
+
+      {
+        returnDocument: 'after',
+        projection: {
+          guest_views: 1,
+          user_views: 1,
+          updated_at: 1,
+          _id: 1 // mình có thể dùng cách này để khỏi phải dùng with vì typescript sẽ tự hiểu
+        }
+      }
+    )
+
+    //  result này là kết quả của monggo
+    //
+
+    //kết quả trả về là object có 2 thuộc tính guest_views và user_views kèm theo _id
+    // resutl ở đây được cấu hình như vậy là do kết quả trả về dựa trên mongoo
+    //  mà monggo luốn trả về obj có props là id
+    // => nhưng mà đây là mình dubngff projection
+    //  nên là result sẽ không có _id mà vậy nên mình phải dùng cách nay
+    // => Nhưng không phải do moongoo là do typscript chúng ta cần nó
+    // With nhận vào WithId<T>
+    return result as WithId<{
+      guest_views: number
+      user_views: number
+      updated_at: Date
+    }>
+  }
+
+  async getTweetChildren({
+    tweet_id,
+    limit,
+    page,
+    tweet_type,
+    user_id //thêm cái này để tý mình tăng view
+  }: {
+    tweet_id: string
+    limit: number
+    page: number
+    tweet_type: TweetType
+    user_id?: string //nếu k đăng nhập thì k có nên nó optional
+  }) {
+    const tweets = await databaseService.tweets
+      .aggregate<Tweet>([
+        // Đoạn này lấy được từ mongo
+        {
+          $match: {
+            _id: new ObjectId('672c30cfc8c4ff5d35171c83')
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'mentions',
+            foreignField: '_id',
+            as: 'hashtags'
+          }
+        },
+        {
+          $project: {
+            mentions: 0
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user_id'
+          }
+        },
+        {
+          $addFields: {
+            user_id: {
+              $map: {
+                input: '$user_id',
+                as: 'user_id',
+                in: {
+                  _id: '$$user_id.id',
+                  name: '$$user_id.name',
+                  username: '$$user_id.username',
+                  email: '$$user_id.email'
+                }
+              }
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'bookmarks',
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'bookmarks'
+          }
+        },
+        {
+          $addFields: {
+            bookmarks: {
+              $size: '$bookmarks'
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'likes',
+            localField: '_id',
+            foreignField: 'tweet_id',
+            as: 'likes'
+          }
+        },
+        {
+          $addFields: {
+            likes: {
+              $size: '$likes'
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'tweets',
+            localField: '_id',
+            foreignField: 'parent_id',
+            as: 'tweet_children'
+          }
+        },
+        {
+          $addFields: {
+            retweet_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', TweetType.Retweet] //1
+                  }
+                }
+              }
+            },
+            comment_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', TweetType.Comment] //2
+                  }
+                }
+              }
+            },
+            quote_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', TweetType.QuoteTweet] //3
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          $project: {
+            tweet_children: 0
+          }
+        },
+        {
+          $skip: 5
+        },
+        {
+          $limit: 2
+        }
+      ])
+      .toArray() //dừng quên .toArray
+
+    //bây giờ ta sẽ tăng view cho các tweet con đã tìm đc
+    //lấy danh sách id các tweet con
+    const ids = tweets.map((tweet) => tweet._id as ObjectId)
+    //tăng view cho các tweet con ở database
+    const inc = user_id ? { user_views: 1 } : { guest_views: 1 }
+    const date = new Date()
+    await databaseService.tweets.updateMany(
+      {
+        _id: {
+          $in: ids
+        }
+      },
+      {
+        $inc: inc,
+        //muốn cập nhật thời gian ta k dùng currentdate trong updateMany được vì nó sẽ k return về document
+        //khiến ta không thu được updated_at để gữi cho client
+        $set: {
+          updated_at: date //thời gian chậm hơn tý xíu so với server
+        }
+      }
+    )
+
+    const total = await databaseService.tweets.countDocuments({
+      parent_id: new ObjectId(tweet_id),
+      type: tweet_type
+    })
+
+    //vì updateMany không return các doc đã cập nhật nên ta không thể gữi kết quả sau cập nhật cho người dùng
+    //chúng ta đành phải cập nhật 'tweets'
+    //'tweets' là mảng các tweet con đã tìm đc trước khi update view nên nó sẽ chưa tăng view và chưa cập nhật updated_at
+    //ta sẽ cập nhật lại
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      user_id ? (tweet.user_views += 1) : (tweet.guest_views += 1)
+    })
+
+    return { tweets, total }
   }
 }
 

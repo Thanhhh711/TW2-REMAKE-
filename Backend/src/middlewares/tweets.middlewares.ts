@@ -21,6 +21,8 @@ import { TokenPayload } from '~/models/requests/User.requests'
 const tweetTypes = numberEnumToArray(TweetType) //kq có dạng [0, 1, 2, 3]
 const tweetAudiences = numberEnumToArray(TweetAudience) //kq có dạng [0, 1]
 const mediaTypes = numberEnumToArray(MediaType) //kq có dạng [0, 1]
+
+// tạo tweet
 export const createTweetValidator = validate(
   checkSchema(
     {
@@ -54,7 +56,7 @@ export const createTweetValidator = validate(
               )
             }
             // nếu `type` là `tweet` thì `parent_id` phải là `null`
-            if (type == TweetType.Tweet && value != null) {
+            if (type == TweetType.Tweet && value === null) {
               throw new Error(TWEETS_MESSAGES.PARENT_ID_MUST_BE_NULL)
             }
             //oke thì trả về true
@@ -170,10 +172,147 @@ export const tweetIdValidator = validate(
               })
             }
 
-            //nếu tweet_id không tồn tại thì báo lỗi
-            const tweet = await databaseService.tweets.findOne({
-              _id: new ObjectId(value)
-            })
+            //   nếu tweet_id không tồn tại thì báo lỗi
+            // const tweet = await databaseService.tweets.findOne({
+            //   _id: new ObjectId(value)
+            // })
+
+            const [tweet] = await databaseService.tweets
+              .aggregate<Tweet>([
+                {
+                  $match: {
+                    _id: new ObjectId('672c30cfc8c4ff5d35171c83')
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'users',
+                    localField: 'mentions',
+                    foreignField: '_id',
+                    as: 'hashtags'
+                  }
+                },
+                {
+                  $project: {
+                    mentions: 0
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'users',
+                    localField: 'user_id',
+                    foreignField: '_id',
+                    as: 'user_id'
+                  }
+                },
+                {
+                  $addFields: {
+                    user_id: {
+                      $map: {
+                        input: '$user_id',
+                        as: 'user_id',
+                        in: {
+                          _id: '$$user_id.id',
+                          name: '$$user_id.name',
+                          username: '$$user_id.username',
+                          email: '$$user_id.email'
+                        }
+                      }
+                    }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'bookmarks',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'bookmarks'
+                  }
+                },
+                {
+                  $addFields: {
+                    bookmarks: {
+                      $size: '$bookmarks'
+                    }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'likes',
+                    localField: '_id',
+                    foreignField: 'tweet_id',
+                    as: 'likes'
+                  }
+                },
+                {
+                  $addFields: {
+                    likes: {
+                      $size: '$likes'
+                    }
+                  }
+                },
+                {
+                  $lookup: {
+                    from: 'tweets',
+                    localField: '_id',
+                    foreignField: 'parent_id',
+                    as: 'tweet_children'
+                  }
+                },
+                {
+                  $addFields: {
+                    retweet_count: {
+                      $size: {
+                        $filter: {
+                          input: '$tweet_children',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', 1]
+                          }
+                        }
+                      }
+                    },
+                    comment_count: {
+                      $size: {
+                        $filter: {
+                          input: '$tweet_children',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', 2]
+                          }
+                        }
+                      }
+                    },
+                    quote_count: {
+                      $size: {
+                        $filter: {
+                          input: '$tweet_children',
+                          as: 'item',
+                          cond: {
+                            $eq: ['$$item.type', 3]
+                          }
+                        }
+                      }
+                    },
+                    view: {
+                      $add: [
+                        {
+                          $toDouble: '$user_views'
+                        },
+                        {
+                          $toDouble: '$guest_views'
+                        }
+                      ]
+                    }
+                  }
+                },
+                {
+                  $project: {
+                    tweet_children: 0
+                  }
+                }
+              ])
+              .toArray()
 
             if (!tweet) {
               throw new ErrorWithStatus({
@@ -193,6 +332,7 @@ export const tweetIdValidator = validate(
   )
 )
 
+//  check validator
 export const audienceValidator = wrapAsync(
   async (req: Request, _res: Response, next: NextFunction) => {
     //  lấy tweet từ req
@@ -209,7 +349,6 @@ export const audienceValidator = wrapAsync(
       }
 
       //  Lấy ra check thử xem là user_id có được sử dụng => check xem thử là có bị banned không
-
       const { user_id } = req.decoded_authorization as TokenPayload
 
       const authorUser = await databaseService.users.findOne({
@@ -239,4 +378,42 @@ export const audienceValidator = wrapAsync(
       next()
     }
   }
+)
+
+export const getTweetChildrenValidator = validate(
+  checkSchema(
+    {
+      tweet_type: {
+        isIn: {
+          options: [tweetTypes],
+          errorMessage: TWEETS_MESSAGES.INVALID_TYPE
+        }
+      },
+      limit: {
+        isNumeric: true,
+        custom: {
+          options: (value, { req }) => {
+            const num = Number(value)
+            if (num > 100 || num < 1) {
+              throw new Error(TWEETS_MESSAGES.LIMIT_MUST_BE_LESS_THAN_100)
+            }
+            return true
+          }
+        }
+      },
+      page: {
+        isNumeric: true,
+        custom: {
+          options: (value, { req }) => {
+            const num = Number(value)
+            if (num < 1) {
+              throw new Error(TWEETS_MESSAGES.LIMIT_MUST_BE_GEATER_THAN_0)
+            }
+            return true
+          }
+        }
+      }
+    },
+    ['query']
+  )
 )
