@@ -652,10 +652,9 @@ export const refreshValidator = validate(
                   secretOrPublicKey: process.env
                     .JWT_SECRET_REFRESH_TOKEN as string
                 }),
+                // thằng này giúp tìm kím refreshTokens
                 databaseService.refreshTokens.findOne({ token: value })
               ])
-
-              console.log(decoded_refresh_token)
 
               if (refresh_token === null) {
                 throw new ErrorWithStatus({

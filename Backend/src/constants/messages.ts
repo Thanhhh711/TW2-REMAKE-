@@ -99,7 +99,8 @@ export const TWEETS_MESSAGES = {
   GET_TWEET_SUCCESS: 'Get tweet success',
   GET_TWEET_CHILDREN_SUCCESS: 'Get tweet children succesfully',
   LIMIT_MUST_BE_LESS_THAN_100: 'Limit must be less than 100',
-  LIMIT_MUST_BE_GEATER_THAN_0: 'Limit must be greater than 0'
+  LIMIT_MUST_BE_GEATER_THAN_0: 'Limit must be greater than 0',
+  GET_NEW_FEEDS_SUCCESS: 'Get new feeds succesfully'
 } as const
 
 export const BOOKMARK_MESSAGES = {

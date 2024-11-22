@@ -126,12 +126,15 @@ class TweetsService {
     tweet_type: TweetType
     user_id?: string //nếu k đăng nhập thì k có nên nó optional
   }) {
+    console.log(tweet_id)
+
     const tweets = await databaseService.tweets
       .aggregate<Tweet>([
         // Đoạn này lấy được từ mongo
         {
           $match: {
-            _id: new ObjectId('672c30cfc8c4ff5d35171c83')
+            _id: new ObjectId(tweet_id),
+            type: TweetType
           }
         },
         {
@@ -260,32 +263,38 @@ class TweetsService {
       ])
       .toArray() //dừng quên .toArray
 
+    console.log('tweets' + tweets)
+
+    //tăng view cho các tweet con ở database
+    const inc = user_id ? { user_views: 1 } : { guest_views: 1 }
+
     //bây giờ ta sẽ tăng view cho các tweet con đã tìm đc
     //lấy danh sách id các tweet con
     const ids = tweets.map((tweet) => tweet._id as ObjectId)
-    //tăng view cho các tweet con ở database
-    const inc = user_id ? { user_views: 1 } : { guest_views: 1 }
-    const date = new Date()
-    await databaseService.tweets.updateMany(
-      {
-        _id: {
-          $in: ids
-        }
-      },
-      {
-        $inc: inc,
-        //muốn cập nhật thời gian ta k dùng currentdate trong updateMany được vì nó sẽ k return về document
-        //khiến ta không thu được updated_at để gữi cho client
-        $set: {
-          updated_at: date //thời gian chậm hơn tý xíu so với server
-        }
-      }
-    )
 
-    const total = await databaseService.tweets.countDocuments({
-      parent_id: new ObjectId(tweet_id),
-      type: tweet_type
-    })
+    console.log(ids)
+
+    const date = new Date()
+    //lấy total ở vị trí thứ 2
+    const [, total] = await Promise.all([
+      databaseService.tweets.updateMany(
+        {
+          _id: {
+            $in: ids
+          }
+        },
+        {
+          $inc: inc,
+          $set: {
+            updated_at: date
+          }
+        }
+      ),
+      databaseService.tweets.countDocuments({
+        parent_id: new ObjectId(tweet_id),
+        type: tweet_type
+      })
+    ])
 
     //vì updateMany không return các doc đã cập nhật nên ta không thể gữi kết quả sau cập nhật cho người dùng
     //chúng ta đành phải cập nhật 'tweets'
@@ -297,6 +306,368 @@ class TweetsService {
     })
 
     return { tweets, total }
+  }
+
+  async getNewFeeds({
+    user_id,
+    limit,
+    page
+  }: {
+    user_id: string
+    limit: number
+    page: number
+  }) {
+    const user_id_obj = new ObjectId(user_id)
+    //lấy danh sách id của những người mà user_id đang follow
+    const followed_user_ids = await databaseService.followers
+      .find(
+        { user_id: user_id_obj },
+        { projection: { followed_user_id: 1, _id: 0 } }
+      )
+      .toArray()
+
+    //dù mình chỉ muốn có followed_user_id trong kết quả thôi, nhưng _id là tự có , ta phải để _id:0 để nó k trả về
+    //kết quả thu được là [{followed_user_id:123},{followed_user_id:12312},{followed_user_id:123123}]
+    //ta muốn thu thành [123,12312,123123] nên ta dùng map
+    const ids = followed_user_ids.map(
+      (item) => item.followed_user_id as ObjectId
+    )
+    ids.push(user_id_obj) //vì ta cũng muốn lấy tweet của chính mình nên ta push user_id của mình vào đây luôn
+
+    //ta sẽ dùng aggregation đã tạo trước đó để tìm các tweet(mà client có quyền xem) của các user thuộc danh sách ids, sau đó sẽ phân trang
+    //lấy từ arrgretion get new feed
+    const tweets = await databaseService.tweets
+      .aggregate<Tweet>([
+        {
+          $match: {
+            user_id: {
+              $in: ids //cập nhật chỗ này
+            }
+          }
+        },
+        {
+          $match:
+            /**
+             * query: The query in MQL.
+             */
+            {
+              sor: [
+                {
+                  audience: 0
+                },
+                {
+                  $and: [
+                    {
+                      audience: 1
+                    },
+                    {
+                      'user.tweeter_circle': {
+                        $in: [user_id_obj] //cập nhật chỗ nà
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $unwind: {
+            path: '$user'
+          }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'users',
+              localField: 'mentions',
+              foreignField: '_id',
+              as: 'hashtags'
+            }
+        },
+        {
+          $project:
+            /**
+             * specifications: The fields to
+             *   include or exclude.
+             */
+            {
+              mentions: 0
+            }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'users',
+              localField: 'user_id',
+              foreignField: '_id',
+              as: 'user_id'
+            }
+        },
+        {
+          $addFields: {
+            user_id: {
+              $map: {
+                input: '$user_id',
+                as: 'user_id',
+                in: {
+                  _id: '$$user_id.id',
+                  name: '$$user_id.name',
+                  username: '$$user_id.username',
+                  email: '$$user_id.email'
+                }
+              }
+            }
+          }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'bookmarks',
+              localField: '_id',
+              foreignField: 'tweet_id',
+              as: 'bookmarks'
+            }
+        },
+        {
+          $addFields:
+            /**
+             * newField: The new field name.
+             * expression: The new field expression.
+             */
+            {
+              bookmarks: {
+                $size: '$bookmarks'
+              }
+            }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'likes',
+              localField: '_id',
+              foreignField: 'tweet_id',
+              as: 'likes'
+            }
+        },
+        {
+          $addFields:
+            /**
+             * newField: The new field name.
+             * expression: The new field expression.
+             */
+            {
+              likes: {
+                $size: '$likes'
+              }
+            }
+        },
+        {
+          $lookup:
+            /**
+             * from: The target collection.
+             * localField: The local join field.
+             * foreignField: The target join field.
+             * as: The name for the results.
+             * pipeline: Optional pipeline to run on the foreign collection.
+             * let: Optional variables to use in the pipeline field stages.
+             */
+            {
+              from: 'tweets',
+              localField: '_id',
+              foreignField: 'parent_id',
+              as: 'tweet_children'
+            }
+        },
+        {
+          $addFields: {
+            retweet_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', 1]
+                  }
+                }
+              }
+            },
+            comment_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', 2]
+                  }
+                }
+              }
+            },
+            quote_count: {
+              $size: {
+                $filter: {
+                  input: '$tweet_children',
+                  as: 'item',
+                  cond: {
+                    $eq: ['$$item.type', 3]
+                  }
+                }
+              }
+            },
+            view: {
+              $add: [
+                {
+                  $toDouble: '$user_views'
+                },
+                {
+                  $toDouble: '$guest_views'
+                }
+              ]
+            }
+          }
+        },
+        {
+          $project:
+            /**
+             * specifications: The fields to
+             *   include or exclude.
+             */
+            {
+              tweet_children: 0,
+              user: {
+                password: 0,
+                email_verify_token: 0,
+                forgot_password_token: 0,
+                twitter_circle: 0,
+                date_of_birth: 0
+              }
+            }
+        },
+        {
+          $skip:
+            /**
+             * Provide the number of documents to skip.
+             */
+            1
+        },
+        {
+          $limit: 2
+        }
+      ])
+      .toArray()
+
+    //lấy tweet_id của các tweet trên server đã get được sau phân trang để tiến hành tăng view
+    const tweet_ids = tweets.map((tweet) => tweet._id as ObjectId)
+    //tăng view trên mongo cho các tweet đã get được
+    const date = new Date()
+    await databaseService.tweets.updateMany(
+      {
+        _id: {
+          $in: tweet_ids
+        }
+      },
+      {
+        $inc: { user_views: 1 }, //chỉ tăng user_views thôi, vì đăng nhập mới có newfeeds
+        $set: {
+          updated_at: date
+        }
+      }
+    )
+
+    //tính total
+    const total = await databaseService.tweets
+      .aggregate([
+        {
+          $match: {
+            user_id: {
+              $in: ids //cập nhật chỗ này
+            }
+          }
+        },
+        {
+          $lookup: {
+            from: 'users',
+            localField: 'user_id',
+            foreignField: '_id',
+            as: 'user'
+          }
+        },
+        {
+          $match: {
+            $or: [
+              {
+                audience: 0
+              },
+              {
+                $and: [
+                  {
+                    audience: 1
+                  },
+                  {
+                    'user.tweeter_circle': {
+                      $in: [user_id_obj] //cập nhật chỗ này
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        {
+          $count: 'total' //count để có tổng tweet thu được, nếu stage là count thì nó biến kết quả thành số luôn
+        }
+      ])
+      .toArray() //mảng 1 phần tử
+
+    //tăng view ở server cho các tweet đã get về đc
+    tweets.forEach((tweet) => {
+      tweet.updated_at = date
+      tweet.user_views += 1
+    })
+
+    return {
+      tweets,
+      total: total[0]?.total || 0
+    }
   }
 }
 

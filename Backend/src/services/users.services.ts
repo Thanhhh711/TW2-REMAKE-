@@ -127,8 +127,6 @@ class UserSerivce {
 
     const user = await this.getMe(user_id)
 
-    console.log(user)
-
     await databaseService.refreshTokens.insertOne(
       new RefreshToken({
         user_id: new ObjectId(user_id),

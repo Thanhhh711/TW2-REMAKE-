@@ -11,6 +11,9 @@ import ForgotPassWord from '../pages/ForgotPassWord'
 import ResetPassword from '../pages/ResetPassword'
 import ChangePassword from '../pages/ChangePassWord'
 import Register from '../pages/Register'
+import Main from '../pages/Main'
+
+import QrCodeComponent from '../pages/QrCode/QrCode'
 
 export default function useRouterElement() {
   function ProtectedRoute() {
@@ -36,8 +39,16 @@ export default function useRouterElement() {
           index: true
         },
         {
+          path: path.qr,
+          element: <QrCodeComponent />
+        },
+        {
           path: path.loginGG,
           element: <LoginGG />
+        },
+        {
+          path: path.main,
+          element: <Main />
         },
 
         {

@@ -8,5 +8,6 @@ export const path = {
   forgotPassword: '/forgotPassword',
   resetPassword: '/resetPassword',
   ChangePassword: '/changePassword',
-  register: '/register'
+  register: '/register',
+  qr: '/pr'
 } as const
