@@ -1,0 +1,29 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser", // sử dụng với ts
+  "plugins": ["@typescript-eslint", "prettier"], // kết họp với prettier
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "eslint-config-prettier",
+    "prettier"
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off", //Quy tắc "no-explicit-any" trong TypeScript đề nghị rằng bạn không nên sử dụng kiểu dữ liệu any một cách rõ ràng trong mã TypeScript của bạn. Kiểu any cho phép bạn áp dụng một kiểu tĩnh cho biến hoặc giá trị mà TypeScript không kiểm tra kiểu dữ liệu
+
+    "prettier/prettier": [
+      "warn",
+      {
+        "arrowParens": "always",
+        "semi": false, // đc nháy đơn, kh đc đôi
+        "trailingComma": "none", // trailingComma: kh sử dụng dấu phẩy ở cuối
+        "tabWidth": 2, // khoảng cách các space
+        "endOfLine": "auto",
+        "useTabs": false,
+        "singleQuote": true,
+        "printWidth": 120,
+        "jsxSingleQuote": true
+      }
+    ]
+  }
+}
