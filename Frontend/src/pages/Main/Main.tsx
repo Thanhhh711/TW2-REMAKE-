@@ -28,16 +28,16 @@ export default function Main() {
   ]
 
   return (
-    <div className='flex h-screen w-full'>
+    <div className='flex h-screen w-full  '>
       {/* Sidebar */}
       <div className='bg-black w-[20%] block border-r-2'>
         <Sidebar menuItems={menuItems} selectedItem={selectedItem} onSelectItem={setSelectedItem} />
       </div>
 
       {/* Main Content */}
-      <div className='flex-1 flex flex-col   w-[60%]'>
+      <div className='flex-1 flex flex-col   w-[60%] '>
         {/* Header */}
-        <div className='flex items-center bg-black px-7 py-2     justify-center w-full border-b-2 border-gray-600'>
+        <div className='flex items-center bg-black px-7 py-2 justify-center w-full border-b-2 border-gray-600  sticky top-0 z-50'>
           <div
             onClick={() => setSelectedButton('forMe')}
             className={`text-lg py-2 px-4 font-semibold transition-all duration-300 text-white w-[50%] text-center
