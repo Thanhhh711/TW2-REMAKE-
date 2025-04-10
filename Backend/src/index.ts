@@ -109,6 +109,8 @@ io.on('connection', (socket) => {
       content: payload.content
     })
 
+    console.log('conversationback', conversation)
+
     await databaseService.conversations.insertOne(conversation)
 
     //gửi conversation mới tạo cho người nhận

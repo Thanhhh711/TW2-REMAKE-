@@ -15,12 +15,12 @@ interface Conversation {
 // ví dụ đây là danh sách bạn bè của chúng ta, giờ chúng ta nhắn tin
 const usernames = [
   {
-    email: 'thanh@gmail21.com', //thanh@gmail21.com
-    value: 'user66d3fdd642c5314d75b52e34'
+    email: 'thanh@gmail51.com', //thanh@gmail21.com
+    value: 'user672c2e15d6df61d9e720165e'
   },
   {
-    email: 'thanh@gmail22.com', //thanh@gmail22com
-    value: 'user66d3fdde42c5314d75b52e36'
+    email: 'thanh@gmail52.com', //thanh@gmail22com
+    value: 'user672c2e32ad76e02dda7b03c8'
   }
 ]
 
@@ -31,21 +31,30 @@ export default function Chat() {
 
   const [value, setValue] = useState('')
   const [conversations, setConversations] = useState<Conversation[]>([]) //lưu các tin nhắn đã nhận được từ
-  const [receiver, setReceiver] = useState('') //lưu id của người nhận tin nhắn
+  // const [receiver, setReceiver] = useState('') //lưu id của người nhận tin nhắn
   const navigate = useNavigate()
 
   console.log('refresh_token', refresh_token)
 
   useEffect(() => {
-    console.log('_Id', profile?._id?.toString())
+    socket.auth = { _id: profile?._id?.toString() }
+    socket.connect()
 
-    socket.auth = { _id: profile?._id?.toString() } //gửi _id lên server để server biết đây là ai
-    socket.connect() //client kết nối socket.io của server localhost:4000, thay cho socket.on('connect', () => {})
-    //bắt sự kiện nhận tin nhắn từ server
     socket.on('receive_message', (data) => {
-      const { payload } = data //lấy nội dung tin nhắn của người gửi
-      setConversations((conversations) => [...conversations, payload])
+      const { payload } = data
+
+      console.log('payload', payload)
+
+      setConversations((prev) => [
+        ...prev,
+        {
+          _id: payload._id,
+          content: payload.content,
+          isSender: payload.sender_id === profile?._id
+        }
+      ])
     })
+
     return () => {
       socket.disconnect()
     }
@@ -85,18 +94,23 @@ export default function Chat() {
     //tạo ra 1 conversation và gữi cho server
     const conversation = {
       sender_id: profile?._id,
-      receiver_id: receiver,
+      receiver_id: '672c2e15d6df61d9e720165e', // 51
       content: value
     }
+
+    console.log('conversation', conversation)
 
     socket.emit('send_message', {
       payload: conversation
     })
+    setValue('') // reset sau khi dùng xong value
 
     setConversations((conversations) => [
       ...conversations,
       {
-        _id: new Date().getTime() //id tạm dể render giao diện k bị lỗi
+        _id: new Date().getTime(),
+        content: value,
+        isSender: true
       }
     ])
   }
@@ -105,7 +119,9 @@ export default function Chat() {
     authApi.getProfile({ name }).then((res) => {
       const user = res.data.result.user
 
-      setReceiver(user._id) //nếu lấy đc thì lưu vào biến receiver
+      console.log('userConuserCon', user)
+
+      // setReceiver(user._id) //nếu lấy đc thì lưu vào biến receiver
       alert(`bạn đang chat với ${user.email}`)
     })
   }
@@ -127,7 +143,7 @@ export default function Chat() {
         <div>
           {usernames.map((username) => (
             <div key={username.email}>
-              <button className='text-white border-2 border-red-500 my-2' onClick={() => getProfile(username.value.trim())}>
+              <button className='text-white border-2 border-blue-500 my-2' onClick={() => getProfile(username.value.trim())}>
                 {username.email}
               </button>
             </div>
