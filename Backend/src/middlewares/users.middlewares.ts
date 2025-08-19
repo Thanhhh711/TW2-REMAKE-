@@ -711,3 +711,36 @@ export const isUserLoggedInValidator =
     //không thì mình sẽ next
     next()
   }
+
+export const optionalAccessTokenValidator = (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers.authorization
+
+  console.log('auth', authHeader)
+
+  if (!authHeader) {
+    // Guest, không có token
+    return next()
+  }
+
+  const token = authHeader.split(' ')[1]
+
+  console.log('token', token)
+
+  if (!token) return next()
+
+  try {
+    const decoded = verifyToken({
+      token,
+      secretOrPublicKey: process.env.JWT_SECRET_ACCESS_TOKEN as string
+    })
+    ;(req as any).decoded_authorization = decoded
+    next()
+  } catch (error) {
+    // Token lỗi, bỏ qua → xem như guest
+    next()
+  }
+}

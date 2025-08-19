@@ -58,6 +58,7 @@ tweetsRouters.get(
   query: {limit: number, page: number}
 */
 
+// cái get những cái tweet mới này bị lỗi
 tweetsRouters.get(
   '/',
   paginationValidator, //hàm kiểm tra validate limit và page

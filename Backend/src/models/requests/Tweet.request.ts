@@ -9,7 +9,7 @@ export interface TweetRequestBody {
 
   // parent_id là dùng để chứa các phản hôì
   // => Ví dụ là 1 luọt share hoặc là 1 comment
-  parent_id: null | string // k là ObjectId vì
+  parent_id: null | string // k là ObjectId vì => paren_id này là id bài viết mà  người khác commet, hoặc share còn nếu mà là viết bài thì null
 
   //  gắn các hashtag
   hashtags: string[] //người dùng truyền lên dạng string,
